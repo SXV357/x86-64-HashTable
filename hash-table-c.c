@@ -3,40 +3,26 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <string.h>
+#include "hash-table-c.h"
 
-struct WordTableFuncs {
-    Table* (*table_init) (long maxWords);
+// TO DOS
+    // test current implementation
+    // update them to make it more compatible with assembly
+    // assembly implementation
+    // optimizations for assembly implementation
 
-    long (*table_lookup) (void * table, char * word, long * value); // searches for a word and returns true/false
-    void (*table_insert) (void * table, char *word, long value); // inserts the (word, value) pair into the hash table
-    long (*table_update) (void * table, char * word, long value); // finds the word and updates its value
-    void (*table_delete) (void * table, char * word); // finds the word and deletes it
-    long (*table_get) (void * table, char * word); // gets the value associated with a word
+// forward declaration for functions
+Table * HashTable_C_init(long maxWords);
+long HashTable_C_hash(void * table, char * word);
+long HashTable_C_lookup(void * table, char * word);
+long HashTable_C_get(void * table, char * word);
+void HashTable_C_insert(void * table, char * word, long value);
+void HashTable_C_delete(void * table, char * word);
+long HashTable_C_update(void * table, char * word, long value);
+void HashTable_C_print(void * table);
+void HashTable_C_clear(void * table);
 
-    void (*table_print) (void * table); // prints all the key value pairs in the table
-    void (*table_clear) (void * table); // clears the key value pairs in all buckets in the hash table
-};
-
-typedef struct HashTableElement {
-    char * word; // key
-    long value; // value(can be anything)
-    struct HashTableElement * next;
-} Node;
-
-typedef struct HashTable {
-    struct WordTableFuncs funcs;
-
-    long maxWords; // maxWords that can exist in the hash table
-    long nWords; // current number of words that exist in the hash table
-    long nBuckets; // number of buckets that exist
-    
-    // collision handling mechanism = chaining
-        // each slot in the hash table is a linked list
-    // array of pointers to HashTableElement structs
-    struct HashTableElement ** array;
-} Table;
-
-struct HashTable * HashTable_C_init(long maxWords) {
+Table * HashTable_C_init(long maxWords) {
     Table * hashTable = (Table *) malloc(sizeof(Table));
 
     // initialize function
