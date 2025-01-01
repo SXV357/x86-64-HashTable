@@ -2,28 +2,28 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
-
-// TO DO:
-    // read thru code to understand implementation
-    // implement an effective collision handling mechanism if not done so alr
-    // implement delete and print functions
+#include <string.h>
 
 struct WordTableFuncs {
-    struct HashTable* (*table_init) (long maxWords);
+    Table* (*table_init) (long maxWords);
+
     long (*table_lookup) (void * table, char * word, long * value); // searches for a word and returns true/false
-    long (*table_insert) (void * table, char *word, long value); // inserts the (word, value) pair into the hash table
+    void (*table_insert) (void * table, char *word, long value); // inserts the (word, value) pair into the hash table
     long (*table_update) (void * table, char * word, long value); // finds the word and updates its value
-    long (*table_delete) (void * table, char * word); // finds the word and deletes it
-    void (*table_print) (void * table);
+    void (*table_delete) (void * table, char * word); // finds the word and deletes it
+    long (*table_get) (void * table, char * word); // gets the value associated with a word
+
+    void (*table_print) (void * table); // prints all the key value pairs in the table
+    void (*table_clear) (void * table); // clears the key value pairs in all buckets in the hash table
 };
 
-struct HashTableElement {
+typedef struct HashTableElement {
     char * word; // key
     long value; // value(can be anything)
     struct HashTableElement * next;
-};
+} Node;
 
-struct HashTable {
+typedef struct HashTable {
     struct WordTableFuncs funcs;
 
     long maxWords; // maxWords that can exist in the hash table
@@ -32,18 +32,26 @@ struct HashTable {
     
     // collision handling mechanism = chaining
         // each slot in the hash table is a linked list
-    struct HashTableElement * array;
-};
+    // array of pointers to HashTableElement structs
+    struct HashTableElement ** array;
+} Table;
 
 struct HashTable * HashTable_C_init(long maxWords) {
-    struct HashTable * hashTable = (struct HashTable *) malloc(sizeof(struct HashTable));
+    Table * hashTable = (Table *) malloc(sizeof(Table));
 
-    // initialize all the functions associated with this hash table
+    // initialize function
     hashTable->funcs.table_init = HashTable_C_init;
+
+    // core operations
     hashTable->funcs.table_lookup = HashTable_C_lookup;
     hashTable->funcs.table_update = HashTable_C_update;
     hashTable->funcs.table_delete = HashTable_C_delete;
+    hashTable->funcs.table_insert = HashTable_C_insert;
+    hashTable->funcs.table_get = HashTable_C_get;
+
+    // utilities
     hashTable->funcs.table_print = HashTable_C_print;
+    hashTable->funcs.table_clear = HashTable_C_clear;
 
     long primeNumbers[] = { 67, 131, 257, 521, 1031, 2053, 4099, 8209, 16411, 32771, 65537, 131073 };
     long nPrimeNumbers = sizeof(primeNumbers)/sizeof(long);
@@ -65,18 +73,16 @@ struct HashTable * HashTable_C_init(long maxWords) {
     hashTable->nWords = 0; // at the start no words exist in the hash table
 
     // the table has nBuckets slots(each of these slots contains a linked list)
-    hashTable->array = (struct HashTableElement *)
-        malloc(hashTable->nBuckets * sizeof(struct HashTableElement));
+    hashTable->array = (Node *)
+        malloc(hashTable->nBuckets * sizeof(Node));
 
     if (hashTable->array == NULL) {
-       perror("error when initializing the array element...");
-       exit(1);
+       return NULL;
     }
 
-    // the word and value elements could still hold random values since they weren't explicitly initialized
-    // hashTable->array[i] itself isn't NULL since memory was allocated for it via the previous statement
+    // the linked list within each bucket is NULL by default
     for (int i = 0; i < hashTable->nBuckets; i++) {
-        hashTable->array[i].next = NULL;
+       hashTable->array[i] = NULL;
     }
 
     return (void*) hashTable;
@@ -84,7 +90,7 @@ struct HashTable * HashTable_C_init(long maxWords) {
 
 long HashTable_C_hash(void * table, char * word) {
     // hashes the word passed in and returns the index of the bucket it's located in
-    struct HashTable * hashTable = table;
+    Table * hashTable = table;
     long hashNum = 1;
     long len = strlen(word);
 
@@ -94,6 +100,7 @@ long HashTable_C_hash(void * table, char * word) {
         // i = 2(hashNum = 31 * (31 * (31 + 98) + 97) + 116)
 
     for (long i = 0; i < len; i++) {
+        // 31 is prime so ensures even distribution and lesser likelihood of collisions
         hashNum = 31 * hashNum + word[i];
     }
 
@@ -103,13 +110,16 @@ long HashTable_C_hash(void * table, char * word) {
     return hashNum % hashTable->nBuckets;
 }
 
-long HashTable_C_lookup(void * table, char * word, long * value) {
-    struct HashTable * hashTable  = table;
+/**
+ * Looks up the key specified by the word parameter in the hash table and return true if it exists
+ */
+long HashTable_C_lookup(void * table, char * word) {
+    Table * hashTable  = table;
 
     long hashNum = HashTable_C_hash(hashTable, word);
 
-    // starting element in the bucket
-    struct HashTableElement * elem = hashTable->array[hashNum].next;
+    // the actual head of the linked list
+    Node * elem = hashTable->array[hashNum];
 
     // traverse thru all elements in the linked list and if we reach the end return false otherwise return true
     while (elem != NULL && strcmp(elem->word,word) != 0) {
@@ -121,25 +131,95 @@ long HashTable_C_lookup(void * table, char * word, long * value) {
       return false;
     }
 
-    *value = elem->value;
     return true;
 }
 
-long HashTable_C_insert(void * table, char * word, long value) {
-    // TO DO
-    return false;
+// gets the value associated with a given key in the hash table
+long HashTable_C_get(void * table, char * word) {
+    Table * hashTable = table;
+    long targetIdx = HashTable_C_hash(table, word);
+
+    Node * head = hashTable->array[targetIdx];
+    while (head) {
+        if (strcmp(head->word, word) == 0) {
+            return head->value;
+        }
+        head = head->next;
+    }
+
+    return NULL;
 }
 
-long HashTable_C_delete(void * table, char * word) {
-    // TO DO
-    return false;
+void HashTable_C_insert(void * table, char * word, long value) {
+    // would just be simple linked list tail insertion since we're not using probing as the collision handling mechanism
+    Table * hashTable = table;
+    assert(hashTable->nWords <= hashTable->maxWords);
+
+    long targetIdx = HashTable_C_hash(table, word);
+
+    Node * new = (Node *) malloc(sizeof(Node));
+    assert(new != NULL);
+
+    strcpy(new->word, word);
+    new->value = value;
+    new->next = NULL;
+
+    Node * head = hashTable->array[targetIdx];
+    if (head == NULL) {
+        head = new;
+    } else {
+        Node * temp = head;
+        while (temp) {
+            if (temp->next == NULL) {
+                break;
+            }
+            temp = temp->next;
+        }
+
+        temp->next = new;
+    }
+
+    hashTable->nWords++;
+}
+
+void HashTable_C_delete(void * table, char * word) {
+    // would just be a simple linked list deletion since we're not using probing as the collision handling mechanism
+    Table * hashTable = table;
+    long targetIdx = HashTable_C_hash(table, word);
+
+    Node * head = hashTable->array[targetIdx];
+    if (strcmp(head->word, word) == 0) {
+        // delete the head
+        Node * temp = head;
+        head = head->next;
+        free(temp);
+        temp = NULL;
+    } else {
+        Node * prev = NULL;
+        while (head) {
+            if (strcmp(head->word, word) == 0) {
+                Node * curr = head;
+                prev->next = head->next;
+
+                free(curr);
+                curr = NULL;
+                break;
+            }
+            prev = head;
+            head = head->next;
+        }
+    }
+
+    hashTable->nWords--;
 }
 
 long HashTable_C_update(void * table, char * word, long value) {
-    struct HashTable * hashTable  = table;
+    // finds the key associated with "char * word", updates its value and returns true if successful
+    Table * hashTable  = table;
 
     long hashNum = HashTable_C_hash(hashTable, word);
-    struct HashTableElement * elem = &hashTable->array[hashNum];
+
+    Node * elem = hashTable->array[hashNum];
 
     while (elem->next != NULL && strcmp(elem->next->word,word) != 0) {
       elem = elem->next;
@@ -151,22 +231,55 @@ long HashTable_C_update(void * table, char * word, long value) {
         return true;
     }
 
-    // Not found
-    struct HashTableElement * e = (struct HashTableElement *)
-                        malloc(sizeof(struct HashTableElement));
+    // Not found case
+        // need to assert since we're inserting a new key-value pair in this case
+    assert(hashTable->nWords <= hashTable->maxWords);
+    Node * e = (Node *) malloc(sizeof(Node));
+
     if (e == NULL) {
-        perror("malloc");
-        exit(1);
+        return false;
     }
 
+    // create a new key value pair and insert it
     elem->next = e;
     e->word = strdup(word);
     e->value = value;
     e->next = NULL;
+    hashTable->nWords++;
 
     return false;
 }
 
+// prints the content of all tge nodes in the hash table
 void HashTable_C_print(void * table) {
-    // TO DO
+    Table * hashTable = table;
+
+    for (int i = 0; i < hashTable->nBuckets; i++) {
+        Node * head = hashTable->array[i];
+        printf("Bucket %d\n", (i + 1));
+
+        while (head) {
+            printf("Node(Key=%c, Value=%d)\n", head->word, head->value);
+            head = head->next;
+        }
+    }
+}
+
+// clears out the contents of all buckets in the hash table
+void HashTable_C_clear(void * table) {
+    Table * hashTable = table;
+
+    for (int i = 0; i < hashTable->nBuckets; i++) {
+        Node * temp = hashTable->array[i];
+        while (temp) {
+            Node * next = temp->next;
+            free(temp);
+            temp = NULL;
+
+            temp = next;
+        }
+    }
+
+    // all key-value pairs have been deleted
+    hashTable->nWords = 0;
 }
