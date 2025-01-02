@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <assert.h>
 #include <string.h>
-#include "hash-table-c.h"
+#include "ht.h"
 
 // TO DOS
     // test current implementation
@@ -11,36 +10,21 @@
     // assembly implementation
     // optimizations for assembly implementation
 
-// forward declaration for functions
-Table * HashTable_C_init(long maxWords);
-long HashTable_C_hash(void * table, char * word);
-long HashTable_C_lookup(void * table, char * word);
-long HashTable_C_get(void * table, char * word);
-void HashTable_C_insert(void * table, char * word, long value);
-void HashTable_C_delete(void * table, char * word);
-long HashTable_C_update(void * table, char * word, long value);
-void HashTable_C_print(void * table);
-void HashTable_C_clear(void * table);
+Table * init(long maxWords) {
+    // there needs to be at least one bucket in the hash table for it to be valid
+    if (maxWords <= 0) {
+        return NULL;
+    }
 
-Table * HashTable_C_init(long maxWords) {
     Table * hashTable = (Table *) malloc(sizeof(Table));
-
-    // initialize function
-    hashTable->funcs.table_init = HashTable_C_init;
-
-    // core operations
-    hashTable->funcs.table_lookup = HashTable_C_lookup;
-    hashTable->funcs.table_update = HashTable_C_update;
-    hashTable->funcs.table_delete = HashTable_C_delete;
-    hashTable->funcs.table_insert = HashTable_C_insert;
-    hashTable->funcs.table_get = HashTable_C_get;
-
-    // utilities
-    hashTable->funcs.table_print = HashTable_C_print;
-    hashTable->funcs.table_clear = HashTable_C_clear;
 
     long primeNumbers[] = { 67, 131, 257, 521, 1031, 2053, 4099, 8209, 16411, 32771, 65537, 131073 };
     long nPrimeNumbers = sizeof(primeNumbers)/sizeof(long);
+
+    if (maxWords > primeNumbers[nPrimeNumbers - 1]) {
+        // cannot have more than 131,073 buckets
+        return NULL;
+    }
 
     // default number of buckets = largest prime number in the list(131,073)
     hashTable->nBuckets = primeNumbers[nPrimeNumbers-1];
@@ -59,8 +43,8 @@ Table * HashTable_C_init(long maxWords) {
     hashTable->nWords = 0; // at the start no words exist in the hash table
 
     // the table has nBuckets slots(each of these slots contains a linked list)
-    hashTable->array = (Node *)
-        malloc(hashTable->nBuckets * sizeof(Node));
+    hashTable->array = (Node **)
+        malloc(hashTable->nBuckets * sizeof(Node *));
 
     if (hashTable->array == NULL) {
        return NULL;
@@ -74,7 +58,7 @@ Table * HashTable_C_init(long maxWords) {
     return (void*) hashTable;
 }
 
-long HashTable_C_hash(void * table, char * word) {
+long hash(void * table, char * word) {
     // hashes the word passed in and returns the index of the bucket it's located in
     Table * hashTable = table;
     long hashNum = 1;
@@ -90,19 +74,16 @@ long HashTable_C_hash(void * table, char * word) {
         hashNum = 31 * hashNum + word[i];
     }
 
-    // this is invalid since this would end up returning a negative index which won't work
-    // if (hashNum < 0) hashNum = - hashNum;
-
     return hashNum % hashTable->nBuckets;
 }
 
 /**
  * Looks up the key specified by the word parameter in the hash table and return true if it exists
  */
-long HashTable_C_lookup(void * table, char * word) {
+bool lookup(void * table, char * word) {
     Table * hashTable  = table;
 
-    long hashNum = HashTable_C_hash(hashTable, word);
+    long hashNum = hash(hashTable, word);
 
     // the actual head of the linked list
     Node * elem = hashTable->array[hashNum];
@@ -121,14 +102,15 @@ long HashTable_C_lookup(void * table, char * word) {
 }
 
 // gets the value associated with a given key in the hash table
-long HashTable_C_get(void * table, char * word) {
+long *get(void * table, char * word) {
     Table * hashTable = table;
-    long targetIdx = HashTable_C_hash(table, word);
+    long targetIdx = hash(table, word);
 
     Node * head = hashTable->array[targetIdx];
+
     while (head) {
         if (strcmp(head->word, word) == 0) {
-            return head->value;
+            return &(head->value);
         }
         head = head->next;
     }
@@ -136,74 +118,115 @@ long HashTable_C_get(void * table, char * word) {
     return NULL;
 }
 
-void HashTable_C_insert(void * table, char * word, long value) {
+bool insert(void * table, char * word, long value) {
     // would just be simple linked list tail insertion since we're not using probing as the collision handling mechanism
-    Table * hashTable = table;
-    assert(hashTable->nWords <= hashTable->maxWords);
+    // cases to handle
+        // we try inserting the exact same key-value pair
+        // we insert the same key, but with a different value
 
-    long targetIdx = HashTable_C_hash(table, word);
+    Table * hashTable = table;
+    if (hashTable->nWords > hashTable->maxWords) {
+        return false;
+    }
+
+    long targetIdx = hash(table, word);
 
     Node * new = (Node *) malloc(sizeof(Node));
-    assert(new != NULL);
+    if (new == NULL) {
+        perror("error allocating memory for a new node");
+        return false;
+    }
+
+    // the word field is a pointer to a char so memory needs to be allocated for this as well
+    new->word = malloc(strlen(word) + 1);
+    if (new->word == NULL) {
+        perror("error allocating memory for the word field");
+        return false;
+    }
 
     strcpy(new->word, word);
+    new->word[strlen(word)] = '\0';
     new->value = value;
     new->next = NULL;
 
     Node * head = hashTable->array[targetIdx];
+
     if (head == NULL) {
-        head = new;
+        // list is empty so no issues
+            // doing head = new won't work
+        hashTable->array[targetIdx] = new;
     } else {
         Node * temp = head;
+
         while (temp) {
-            if (temp->next == NULL) {
+            // found the same key
+            if (strcmp(temp->word, word) == 0) {
+                if (temp->value == value) {
+                    // if the value is also the same then no changes happen and we return false
+                    return false;
+                } else {
+                    // the value is different so just update
+                    temp->value = value;
+                    return true;
+                }
+            } else if (temp->next == NULL) {
                 break;
             }
             temp = temp->next;
         }
 
+        // reach here when we're inserting a new key-value pair that hasn't been seen previously
         temp->next = new;
     }
 
     hashTable->nWords++;
+    return true;
 }
 
-void HashTable_C_delete(void * table, char * word) {
+bool delete(void * table, char * word) {
     // would just be a simple linked list deletion since we're not using probing as the collision handling mechanism
     Table * hashTable = table;
-    long targetIdx = HashTable_C_hash(table, word);
+    long targetIdx = hash(table, word);
 
     Node * head = hashTable->array[targetIdx];
-    if (strcmp(head->word, word) == 0) {
-        // delete the head
-        Node * temp = head;
-        head = head->next;
-        free(temp);
-        temp = NULL;
-    } else {
-        Node * prev = NULL;
-        while (head) {
-            if (strcmp(head->word, word) == 0) {
-                Node * curr = head;
-                prev->next = head->next;
+    Node * prev = NULL;
+    bool found = false;
 
-                free(curr);
-                curr = NULL;
-                break;
+    while (head) {
+        if (strcmp(head->word, word) == 0) {
+            found = true;
+            Node * temp = head;
+
+            if (prev == NULL) {
+                // deleting the head
+                head = head->next;
+            } else {
+                prev->next = head->next;
             }
-            prev = head;
-            head = head->next;
+            
+            free(temp);
+            temp = NULL;
+            break;
         }
+
+        prev = head;
+        head = head->next;
+    }
+
+    if (!found) {
+        // the key to be deleted wasn't found
+        return false;
     }
 
     hashTable->nWords--;
+    return true;
 }
 
-long HashTable_C_update(void * table, char * word, long value) {
+bool update(void * table, char * word, long value) {
     // finds the key associated with "char * word", updates its value and returns true if successful
     Table * hashTable  = table;
 
-    long hashNum = HashTable_C_hash(hashTable, word);
+    long hashNum = hash(hashTable, word);
 
     Node * elem = hashTable->array[hashNum];
 
@@ -218,8 +241,10 @@ long HashTable_C_update(void * table, char * word, long value) {
     }
 
     // Not found case
-        // need to assert since we're inserting a new key-value pair in this case
-    assert(hashTable->nWords <= hashTable->maxWords);
+    if ( hashTable->nWords > hashTable->maxWords) {
+        return false;
+    }
+
     Node * e = (Node *) malloc(sizeof(Node));
 
     if (e == NULL) {
@@ -231,32 +256,41 @@ long HashTable_C_update(void * table, char * word, long value) {
     e->word = strdup(word);
     e->value = value;
     e->next = NULL;
-    hashTable->nWords++;
 
+    hashTable->nWords++;
     return false;
 }
 
-// prints the content of all tge nodes in the hash table
-void HashTable_C_print(void * table) {
+// prints the content of all the nodes in the hash table
+void print(void * table) {
     Table * hashTable = table;
 
     for (int i = 0; i < hashTable->nBuckets; i++) {
         Node * head = hashTable->array[i];
-        printf("Bucket %d\n", (i + 1));
 
-        while (head) {
-            printf("Node(Key=%c, Value=%d)\n", head->word, head->value);
-            head = head->next;
+        // only print the contents if the bucket isn't NULL
+        if (head) {
+            printf("Bucket %d\n", (i + 1));
+
+            while (head) {
+                if (head->next != NULL) {
+                    printf("Node(Key=%s, Value=%ld)->", head->word, head->value);
+                } else {
+                    printf("Node(Key=%s, Value=%ld)\n", head->word, head->value);
+                }
+                head = head->next;
+            }
         }
     }
 }
 
 // clears out the contents of all buckets in the hash table
-void HashTable_C_clear(void * table) {
+void clear(void * table) {
     Table * hashTable = table;
 
     for (int i = 0; i < hashTable->nBuckets; i++) {
         Node * temp = hashTable->array[i];
+
         while (temp) {
             Node * next = temp->next;
             free(temp);

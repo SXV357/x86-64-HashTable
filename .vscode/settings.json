@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "hash-table-c.h": "c"
+        "hash-table-c.h": "c",
+        "hash-table.h": "c",
+        "string.h": "c",
+        "assert.h": "c",
+        "stdlib.h": "c",
+        "ht.h": "c"
     }
 }
