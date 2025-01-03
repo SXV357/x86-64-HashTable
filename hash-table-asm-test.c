@@ -8,7 +8,7 @@
 // functions defined in the assembly implementation
 extern Table * ASM_init(long maxWords);
 
-extern bool ASM_lookup(Table * table, char * word, long * value);
+extern bool ASM_lookup(Table * table, char * word);
 extern long ASM_get(Table * table, char * word);
 extern bool ASM_insert(Table * table, char * word, long value);
 extern bool ASM_delete(Table * table, char * word);

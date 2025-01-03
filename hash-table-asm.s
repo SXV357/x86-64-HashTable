@@ -1,3 +1,5 @@
+.data
+
 .text
 
 .globl ASM_init
@@ -9,7 +11,7 @@ ASM_init:        # Table * ASM_init(long maxWords)
     ret
 
 .globl ASM_hash
-ASM_hash:        # long ASM_hash(void * table, char * word);
+ASM_hash:        # long ASM_hash(Table * table, char * word);
     pushq %rbp
     movq %rsp, %rbp
 
@@ -17,7 +19,7 @@ ASM_hash:        # long ASM_hash(void * table, char * word);
     ret
 
 .globl ASM_lookup
-ASM_lookup:       # long ASM_lookup(void * table, char * word, long * value);
+ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     pushq %rbp
     movq %rsp, %rbp
 
@@ -25,7 +27,7 @@ ASM_lookup:       # long ASM_lookup(void * table, char * word, long * value);
     ret
 
 .globl ASM_get
-ASM_get:         # long ASM_get(void * table, char * word)
+ASM_get:         # long ASM_get(Table * table, char * word)
     pushq %rbp
     movq %rsp, %rbp
 
@@ -33,7 +35,7 @@ ASM_get:         # long ASM_get(void * table, char * word)
     ret
 
 .globl ASM_insert
-ASM_insert:        # void ASM_insert(void * table, char * word, long value)
+ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     pushq %rbp
     movq %rsp, %rbp
 
@@ -41,7 +43,7 @@ ASM_insert:        # void ASM_insert(void * table, char * word, long value)
     ret
 
 .globl ASM_delete
-ASM_delete:        # void ASM_delete(void * table, char * word)
+ASM_delete:        # bool ASM_delete(Table * table, char * word)
     pushq %rbp
     movq %rsp, %rbp
 
@@ -49,7 +51,7 @@ ASM_delete:        # void ASM_delete(void * table, char * word)
     ret
 
 .globl ASM_update
-ASM_update:       # long ASM_update(void * table, char * word, long value);
+ASM_update:       # bool ASM_update(Table * table, char * word, long value);
     pushq %rbp
     movq %rsp, %rbp
 
@@ -57,7 +59,7 @@ ASM_update:       # long ASM_update(void * table, char * word, long value);
     ret
 
 .globl ASM_print
-ASM_print:        # void ASM_print(void * table)
+ASM_print:        # void ASM_print(Table * table)
     pushq %rbp
     movq %rsp, %rbp
 
@@ -65,7 +67,7 @@ ASM_print:        # void ASM_print(void * table)
     ret
 
 .globl ASM_clear
-ASM_clear:        # void ASM_clear(void * table)
+ASM_clear:        # void ASM_clear(Table * table)
     pushq %rbp
     movq %rsp, %rbp
 
