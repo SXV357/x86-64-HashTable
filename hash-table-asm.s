@@ -1,5 +1,13 @@
 .text
 
+.globl ASM_init
+ASM_init:        # Table * ASM_init(long maxWords)
+    pushq %rbp
+    movq %rsp, %rbp
+
+    leave
+    ret
+
 .globl ASM_hash
 ASM_hash:        # long ASM_hash(void * table, char * word);
     pushq %rbp
