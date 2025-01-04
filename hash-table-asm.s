@@ -111,6 +111,62 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     pushq %rbp
     movq %rsp, %rbp
 
+    pushq %rbx
+    pushq %rbx
+
+    cmpq $0x0, %rsi   # if (word == NULL)
+    je lookup_null_word
+
+    movq %rsi, %rbx    # store word in rbx
+
+    xorq %rax, %rax
+    call ASM_hash
+    movq %rax, %rdx    # long hashNum = hash(table, word)
+
+    movq 24(%rdi), %rcx  # rcx has address of table->array
+    movq %rdx, %r8
+    imulq $24, %r8      # offset of 24
+    addq %rcx, %r8      # Node * elem = table->array[hashNum]
+
+while_lookup:
+    cmpq $0x0, %r8     # if (elem != NULL)
+    je break_while_lookup
+
+    movq (%r8), %rdi
+    movq %rbx, %rsi
+    xorq %rax, %rax
+
+    pushq %r8
+    pushq %r8
+
+    call strcmp
+
+    popq %r8
+    popq %r8
+
+    movq %rax, %r9     # r9 = strcmp(elem->word, word)
+
+    cmpq $0, %r9       # if strcmp(elem->word, word) != 0
+    je break_while_lookup
+
+    movq 16(%r8), %r8   # elem = elem->next;
+    jmp while_lookup
+
+break_while_lookup:
+    cmpq $0x0, %r8     # if (elem == NULL)
+    je lookup_null_word
+
+    movq $1, %rax     # return 1(true)
+    jmp finish_lookup
+
+lookup_null_word:
+    movq $0, %rax      # return 0(false)
+    jmp finish_lookup
+
+finish_lookup:
+    popq %rbx
+    popq %rbx
+
     leave
     ret
 
