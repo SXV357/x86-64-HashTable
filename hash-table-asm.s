@@ -125,7 +125,7 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
 
     movq 24(%rdi), %rcx  # rcx has address of table->array
     movq %rdx, %r8
-    imulq $24, %r8      # offset of 24
+    imulq $8, %r8      # offset of 8(each entry in the array is a pointer to HashTableElement)
     addq %rcx, %r8      # Node * elem = table->array[hashNum]
 
 while_lookup:
