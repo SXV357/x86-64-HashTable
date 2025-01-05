@@ -20,6 +20,10 @@ Table * init(long maxWords) {
     }
 
     Table * table = (Table *) malloc(sizeof(Table));
+    if (table == NULL) {
+        perror("(init) error allocating memory for the table");
+        return NULL;
+    }
 
     // default number of buckets = largest prime number in the list(131,073)
     table->nBuckets = primeNumbers[nPrimeNumbers-1];
@@ -42,7 +46,7 @@ Table * init(long maxWords) {
         malloc(table->nBuckets * sizeof(Node *));
 
     if (table->array == NULL) {
-       perror("error initializing the array field");
+       perror("(init) error allocating memory for table->array");
        return NULL;
     }
 
@@ -131,14 +135,14 @@ bool insert(Table * table, char * word, long value) {
 
     Node * new = (Node *) malloc(sizeof(Node));
     if (new == NULL) {
-        perror("error allocating memory for a new node");
+        perror("(insert) error allocating memory for a new node");
         return false;
     }
 
     // the word field is a pointer to a char so memory needs to be allocated for this as well
     new->word = malloc(strlen(word) + 1);
     if (new->word == NULL) {
-        perror("error allocating memory for the word field");
+        perror("(insert) error allocating memory for the word field");
         return false;
     }
 

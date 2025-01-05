@@ -5,14 +5,17 @@ nPrimeNumbers:
     .quad 12
 
 .text
-initErr:
-    .string "error initializing the array field"
+initTableErr:
+  .string "(init) error allocating memory for the table"
+
+initArrayErr:
+  .string "(init) error allocating memory for table->array"
 
 insertErrNode:
-    .string "error allocating memory for a new node"
+    .string "(insert) error allocating memory for a new node"
 
 insertErrWord:
-    .string "error allocating memory for the word field"
+    .string "(insert) error allocating memory for the word field"
 
 bucketNumber:
     .string "Bucket %ld\n"
@@ -28,6 +31,74 @@ ASM_init:        # Table * ASM_init(long maxWords)
     pushq %rbp
     movq %rsp, %rbp
 
+    cmpq $0, %rdi    # if (maxWords <= 0)
+    jle init_violation
+
+    movq nPrimeNumbers, %rax
+    subq $1. %rax
+    imulq $8, %rax
+    addq $primeNumbers, %rax   # rax has address of primeNumbers[nPrimeNumbers - 1]
+
+    movq (%rax), %rsi     # store primeNumbers[nPrimeNumbers - 1] in rsi
+
+    cmpq %rsi, %rdi     # if (maxWords > primeNumbers[nPrimeNumbers - 1])
+    jg init_violation
+
+    movq %rdi, %rdx     # temporarily store maxWords in rdx
+    movq $32, %rdi
+    xorq %rax, %rax
+
+    pushq %rsi       # preserve maxWords and primeNumbers[nPrimeNumbers - 1]
+    pushq %rsi
+    pushq %rdx
+    pushq %rdx
+
+    call malloc
+
+    popq %rdx
+    popq %rdx
+    popq %rsi
+    popq %rsi
+
+    movq %rax, %rcx    # Table * table = (Table *) malloc(sizeof(Table))
+    cmpq $0x0, %rcx     # if (table == NULL)
+    je init_table_err
+
+    movq %rsi, 16(%rcx)  # table->nBuckets = primeNumbers[nPrimeNumbers - 1]
+    movq $0, %r8         # long i = 0;
+
+init_loop:
+   cmpq %r8, nPrimeNumbers   # while (i < nPrimeNumbers)
+   jle break_init_loop
+
+   movq %r8, %r9
+   imulq $8, %r9
+   addq $primeNumbers, %r9   # r9 has addr of primeNumbers[i]
+
+   cmpq %rdx, (%r9)    # if (maxWords < primeNumbers[i])
+   jle continue_init_loop
+
+   movq (%r9), %rax
+   movq %rax, 16(%rcx)   # table->nBuckets = primeNumbers[i]
+   jmp break_init_loop
+
+continue_init_loop:
+  addq $1, %r8
+  jmp init_loop
+
+break_init_loop:
+  
+
+init_table_err:
+   movq $initTableErr, %rdi
+   call perror
+   jmp init_violation
+
+init_violation:
+    movq $0x0, %rax     # return NULL
+    jmp finish_init
+
+finish_init:
     leave
     ret
 
@@ -125,7 +196,7 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
 
     movq 24(%rdi), %rcx  # rcx has address of table->array
     movq %rdx, %r8
-    imulq $8, %r8      # offset of 8(each entry in the array is a pointer to HashTableElement)
+    imulq $24, %r8      # offset of 24
     addq %rcx, %r8      # Node * elem = table->array[hashNum]
 
 while_lookup:
