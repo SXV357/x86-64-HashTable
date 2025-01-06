@@ -31,21 +31,25 @@ ASM_init:        # Table * ASM_init(long maxWords)
     pushq %rbp
     movq %rsp, %rbp
 
+    pushq %rbx
+    pushq %rbx
+
     cmpq $0, %rdi    # if (maxWords <= 0)
     jle init_violation
 
     movq nPrimeNumbers, %rax
-    subq $1. %rax
+    subq $1. %rax             # nPrimeNumbers - 1
     imulq $8, %rax
     addq $primeNumbers, %rax   # rax has address of primeNumbers[nPrimeNumbers - 1]
 
-    movq (%rax), %rsi     # store primeNumbers[nPrimeNumbers - 1] in rsi
+    movq (%rax), %rsi     # rsi = primeNumbers[nPrimeNumbers - 1]
 
     cmpq %rsi, %rdi     # if (maxWords > primeNumbers[nPrimeNumbers - 1])
     jg init_violation
 
-    movq %rdi, %rdx     # temporarily store maxWords in rdx
-    movq $32, %rdi
+    movq %rdi, %rdx     # rdx = maxWords(temporarily store maxWords here)
+
+    movq $32, %rdi     # sizeof(Table) = 32
     xorq %rax, %rax
 
     pushq %rsi       # preserve maxWords and primeNumbers[nPrimeNumbers - 1]
@@ -61,6 +65,7 @@ ASM_init:        # Table * ASM_init(long maxWords)
     popq %rsi
 
     movq %rax, %rcx    # Table * table = (Table *) malloc(sizeof(Table))
+
     cmpq $0x0, %rcx     # if (table == NULL)
     je init_table_err
 
@@ -83,22 +88,67 @@ init_loop:
    jmp break_init_loop
 
 continue_init_loop:
-  addq $1, %r8
+  addq $1, %r8          # i++;
   jmp init_loop
 
 break_init_loop:
-  
+  movq %rdx, (%rcx)      # table->maxWords = maxWords;
+  movq $0, 8(%rcx)       # table->nWords = 0;
+
+  movq 16(%rcx), %rax
+  imulq $8, %rax      # rax = table->nBuckets * sizeof(Node *)
+  movq %rax, %rdi
+
+  pushq %rcx          # preserve table(only need this going forward)
+  pushq %rcx
+
+  call malloc
+
+  popq %rcx
+  popq %rcx
+
+  movq %rax, %rbx
+  movq %rbx, 24(%rcx) # table->array = (Node **) malloc(table->nBuckets * sizeof(Node *))
+
+  cmpq $0x0, 24(%rcx)   # if (table->array == NULL)
+  je init_array_err
+
+  movq $0, %r8          # long i = 0;
+
+init_loop_two:
+  cmpq %r8, 16(%rcx)   # while (i < table->nBuckets)
+  jle ret_table
+
+  movq %r8, %r9
+  imulq $8, %r9
+  addq 24(%rcx), %r9   # r9 has addr of table->array[i]
+
+  movq $0x0, (%r9)    # table->array[i] = NULL;
+  addq $1, %r8
+  jmp init_loop_two
 
 init_table_err:
    movq $initTableErr, %rdi
-   call perror
+   call perror      # perror("(init) error allocating memory for the table")
    jmp init_violation
+
+init_array_err:
+    movq $initArrayErr, %rdi
+    call perror     # perror("(init) error allocating memory for table->array")
+    jmp init_violation
 
 init_violation:
     movq $0x0, %rax     # return NULL
     jmp finish_init
 
+ret_table:
+    movq %rcx, %rax     # return table;
+    jmp finish_init
+
 finish_init:
+    popq %rbx
+    popq %rbx
+
     leave
     ret
 
