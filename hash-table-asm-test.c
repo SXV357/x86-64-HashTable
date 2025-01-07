@@ -20,7 +20,7 @@ extern void ASM_clear(Table * table);
 
 // function forward declarations
 void test_hash(Table * table);
-void test_init(long maxWords);
+void test_init();
 
 void test_lookup(Table * table);
 void test_insert(Table * table);
@@ -31,16 +31,55 @@ void test_get(Table * table);
 void test_clear(Table * table);
 
 int main(int argc, char **argv) {
-   Table * table = init(256);
-   assert(table);
-   assert(table->nBuckets == 257);
-   assert(table->maxWords == 256);
+   printf("Running table init tests...\n");
+   test_init();
+   printf("Table init tests passed...\n\n");
 
-   printf("Running hash tests...\n");
+   printf("Running actual table initialization test...\n");
+   long maxWords = 256;
+   Table * table = ASM_init(maxWords);
+   assert(table);
+   assert(table->maxWords == maxWords);
+   assert(table->nBuckets == maxWords + 1);
+   assert(table->array);
+   for (int i = 0; i < table->nBuckets; i++) {
+      assert(table->array[i] == NULL);
+   }
+   printf("Actual table initialization test passed...\n\n");
+
+   printf("Running table hash tests...\n");
    test_hash(table);
-   printf("Hash tests passed...\n\n");
+   printf("Table hash tests passed...\n\n");
 
    return 0;
+}
+
+void test_init() {
+   long maxWordsValidOne = 56;
+   Table * tableOne = ASM_init(maxWordsValidOne);
+   assert(tableOne);
+   assert(tableOne->maxWords == maxWordsValidOne);
+   assert(tableOne->nBuckets == 67);
+   assert(tableOne->array);
+   for (int i = 0; i < tableOne->nBuckets; i++) {
+     assert(tableOne->array[i] == NULL);
+   }
+
+   long maxWordsValidTwo = 113.5;
+   Table * tableTwo = ASM_init(maxWordsValidTwo);
+   assert(tableTwo);
+   assert(tableTwo->maxWords == 113);
+   assert(tableTwo->nBuckets == 131);
+   assert(tableTwo->array);
+   for (int j = 0; j < tableTwo->nBuckets; j++) {
+      assert(tableTwo->array[j] == NULL);
+   }
+
+   long maxWordsInvalid[3] = {-3, 200000, 0};
+   for (int k = 0; k < 3; k++) {
+      Table * curr = ASM_init(maxWordsInvalid[k]);
+      assert(curr == NULL);
+   }
 }
 
 void test_hash(Table * table) {
@@ -50,11 +89,10 @@ void test_hash(Table * table) {
   long asmHashVal = ASM_hash(table, word);
 
   assert(cHashVal == asmHashVal);
+
+  // test for invalid word argument
   assert(hash(table, NULL) == ASM_hash(table, NULL));
-}
-
-void test_init(long maxWords) {
-
+  assert(hash(table, "") == ASM_hash(table, ""));
 }
 
 void test_lookup(Table * table) {

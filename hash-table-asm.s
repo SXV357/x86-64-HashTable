@@ -38,7 +38,7 @@ ASM_init:        # Table * ASM_init(long maxWords)
     jle init_violation
 
     movq nPrimeNumbers, %rax
-    subq $1. %rax             # nPrimeNumbers - 1
+    subq $1, %rax             # nPrimeNumbers - 1
     imulq $8, %rax
     addq $primeNumbers, %rax   # rax has address of primeNumbers[nPrimeNumbers - 1]
 
@@ -165,10 +165,15 @@ ASM_hash:        # long ASM_hash(Table * table, char * word);
     pushq %r13
 
     cmpq $0x0, %rsi   # if (word == NULL)
-    je hash_null_word
+    je hash_violation
 
     movq %rdi, %rbx  # store table in rbx(ensure it doesn't get overwritten)
     movq %rsi, %r13  # store word in r13
+
+    movq %r13, %rdi
+    call strlen
+    cmpq $0, %rax    # if (strlen(word) == 0)
+    je hash_violation
 
     movq $1, %rdx   # long hashNum = 1
 
@@ -212,7 +217,7 @@ break_while_hash:
     movq %rdx, %rax    # we are interested in the remainder so move this
     jmp finish_hash
 
-hash_null_word:
+hash_violation:
     movq $-1, %rax     # return -1
     jmp finish_hash
 
@@ -303,6 +308,204 @@ ASM_get:         # long ASM_get(Table * table, char * word)
 ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     pushq %rbp
     movq %rsp, %rbp
+
+    pushq %rbx
+    pushq %rbx
+    pushq %r10
+    pushq %r13
+    pushq %r14
+    pushq %r15
+
+    movq 8(%rdi), %rax  # move table->nWords to rax
+    cmpq %rax, (%rdi)   # if (table->nWords > table->maxWords)
+    jl insert_violation
+
+    cmpq $0x0, %rsi    # if (word == NULL)
+    je insert_violation
+
+    cmpq $0, %rdx      # if (value < 0)
+    jl insert_violation
+
+    pushq %rdi
+    pushq %rsi
+    pushq %rdx
+    pushq %rdx
+
+    call ASM_hash
+
+    popq %rdx
+    popq %rdx
+    popq %rsi
+    popq %rdi
+
+    movq %rax, %rcx    # long targetIdx = ASM_hash(table, word)
+
+    movq %rdi, %rbx   # rbx = Table * table
+    movq %rsi, %r10   # r10 = char * word
+    movq %rdx, %r13   # r13 = long value
+
+    movq $24, %rdi    # 24 = sizeof(Node)
+    xorq %rax, %rax
+
+    pushq %rcx
+    pushq %rcx
+
+    call malloc
+
+    popq %rcx
+    popq %rcx
+
+    movq %rax, %rdx   # Node *new = (Node *) malloc(sizeof(Node))
+    cmpq $0x0, %rdx   # if (new == NULL)
+    je insert_err_node
+
+    movq %r10, %rdi
+    xorq %rax, %rax
+
+    pushq %rcx
+    pushq %rcx
+    pushq %rdx
+    pushq %rdx
+
+    call strlen      # strlen(word)
+
+    popq %rdx
+    popq %rdx
+    popq %rcx
+    popq %rcx
+
+    movq %rax, %r8   # r8 now stores strlen(word)
+
+    movq %r8, %rax
+    addq $1, %rax   # strlen(word) + 1
+    movq %rax, %rdi
+
+    pushq %r8
+    pushq %r8
+    pushq %rcx
+    pushq %rcx
+    pushq %rdx
+    pushq %rdx
+
+    call malloc
+
+    popq %rdx
+    popq %rdx
+    popq %rcx
+    popq %rcx
+    popq %r8
+    popq %r8
+
+    movq %rax, (%rdx)  # new->word = malloc(strlen(word) + 1)
+    cmpq $0x0, (%rdx)  # if (new->word == NULL)
+    je insert_err_word
+
+    movq (%rdx), %rdi
+    movq %r10, %rsi
+
+    pushq %r8
+    pushq %r8
+    pushq %rcx
+    pushq %rcx
+    pushq %rdx
+    pushq %rdx
+
+    call strcpy      # strcpy(new->word, word);
+
+    popq %rdx
+    popq %rdx
+    popq %rcx
+    popq %rcx
+    popq %r8
+    popq %r8
+
+    addq (%rdx), %r8  # r8 now stores addr of new->word[strlen(word)]
+    movb $0, (%r8)   # new->word[strlen(word)] = '\0';
+
+    movq %r13, 8(%rdx)  # new->value = value;
+    movq $0x0, 16(%rdx) # new->next = NULL;
+
+    movq %rcx, %rax
+    imulq $8, %rax
+    addq %rbx, %rax
+    movq %rax, %rcx    # Node * head = table->array[targetIdx]
+
+    cmpq $0x0, %rcx    # if (head == NULL)
+    je insert_list_empty
+
+    movq %rcx, %r9    # Node * temp = head;
+
+insert_while:
+   cmpq $0x0, %r9     # while (temp != NULL)
+   je break_insert_while
+
+   movq (%r9), %rdi
+   movq %r10, %rsi
+
+   pushq %r9
+   pushq %r9
+
+   call strcmp
+
+   popq %r9
+   popq %r9
+
+   cmpq $0, %rax     # if (strcmp(temp->word, word) == 0)
+   je insert_match_found
+
+   cmpq $0x0, 16(%r9)  # else if (temp->next == NULL)
+   je break_insert_while
+   jmp continue_insert_while
+
+insert_match_found:
+   cmpq 8(%r9), %r13  # if (temp->value == value)
+   je insert_violation
+
+   movq %r13, 8(%r9)   # temp->value = value
+   jmp insert_succ_no_new_word
+
+continue_insert_while:
+   movq 16(%r9), %r9   # temp = temp->next;
+   jmp insert_while
+
+break_insert_while:
+   movq %rdx, 16(%r9)  # temp->next = new;
+   jmp insert_done
+
+insert_list_empty:
+   movq %rdx, (%rcx)   # table->array[targetIdx] = new;
+   jmp insert_done
+
+insert_err_word:
+   movq $insertErrWord, %rdi
+   call perror
+   jmp insert_violation
+
+insert_err_node:
+   movq $insertErrNode, %rdi
+   call perror
+   jmp insert_violation
+
+insert_violation:
+    movq $0, %rax     # return 0(false)
+    jmp finish_insert
+
+insert_done:
+   addq $1, 8(%rbx)   # table->nWords++;
+   movq $1, %rax     # return 1(true)
+   jmp finish_insert
+
+insert_succ_no_new_word:
+    movq $1, %rax     # return 1(true)
+    jmp finish_insert
+
+finish_insert:
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r10
+    popq %rbx
+    popq %rbx
 
     leave
     ret

@@ -60,6 +60,10 @@ Table * init(long maxWords) {
 
 long hash(Table * table, char * word) {
     // hashes the word passed in and returns the index of the bucket it's located in
+    if ((word == NULL) || (strlen(word) == 0)) {
+        return -1;
+    }
+    
     long hashNum = 1;
     long len = strlen(word);
 
