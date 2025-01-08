@@ -1,7 +1,7 @@
 .data
-primeNumbers: 
+primeNumbers:
     .quad 67, 131, 257, 521, 1031, 2053, 4099, 8209, 16411, 32771, 65537, 131073
-nPrimeNumbers: 
+nPrimeNumbers:
     .quad 12
 
 .text
@@ -313,8 +313,6 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     pushq %rbx
     pushq %r10
     pushq %r13
-    pushq %r14
-    pushq %r15
 
     movq 8(%rdi), %rax  # move table->nWords to rax
     cmpq %rax, (%rdi)   # if (table->nWords > table->maxWords)
@@ -326,12 +324,12 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     cmpq $0, %rdx      # if (value < 0)
     jl insert_violation
 
-    pushq %rdi
+    pushq %rdi       # need the original values of rdi, rsi and rdx after func call
     pushq %rsi
     pushq %rdx
     pushq %rdx
 
-    call ASM_hash
+    call ASM_hash     # ASM_hash(table, word)
 
     popq %rdx
     popq %rdx
@@ -347,20 +345,29 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     movq $24, %rdi    # 24 = sizeof(Node)
     xorq %rax, %rax
 
+    # all params moved to callee-saved registers and only thing that needs to be
+    # preserved is targetIdx so push that before making the malloc call
+
     pushq %rcx
     pushq %rcx
 
-    call malloc
+    call malloc     # malloc(sizeof(Node))
 
     popq %rcx
     popq %rcx
+
+    # it's fine that rdx is being overridden here because what was orig in rdx
+    # i.e. long value has been moved to r13
 
     movq %rax, %rdx   # Node *new = (Node *) malloc(sizeof(Node))
     cmpq $0x0, %rdx   # if (new == NULL)
     je insert_err_node
 
-    movq %r10, %rdi
+    movq %r10, %rdi    # r10 has char * word
     xorq %rax, %rax
+
+    # table, word and value all in callee-saved registers
+    # targetIdx and node to be inserted in caller-saved so push them
 
     pushq %rcx
     pushq %rcx
@@ -374,11 +381,13 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     popq %rcx
     popq %rcx
 
-    movq %rax, %r8   # r8 now stores strlen(word)
+    movq %rax, %r8   # r8 = strlen(word)
 
     movq %r8, %rax
-    addq $1, %rax   # strlen(word) + 1
-    movq %rax, %rdi
+    addq $1, %rax
+    movq %rax, %rdi  # rdi = strlen(word) + 1
+
+    # need to preserve word length, node to insert and targetIdx
 
     pushq %r8
     pushq %r8
@@ -400,8 +409,11 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     cmpq $0x0, (%rdx)  # if (new->word == NULL)
     je insert_err_word
 
-    movq (%rdx), %rdi
-    movq %r10, %rsi
+    movq (%rdx), %rdi  # (%rdx) = new->word
+    movq %r10, %rsi    # r10 = char * word
+
+    # strlen(word) will be used in next statement so needs to be preserved
+    # so will targetIdx and node in subsequent statements
 
     pushq %r8
     pushq %r8
@@ -420,70 +432,87 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     popq %r8
 
     addq (%rdx), %r8  # r8 now stores addr of new->word[strlen(word)]
-    movb $0, (%r8)   # new->word[strlen(word)] = '\0';
+    movb (%r8), %al
+    movb $0, %al   # new->word[strlen(word)] = '\0';
 
     movq %r13, 8(%rdx)  # new->value = value;
     movq $0x0, 16(%rdx) # new->next = NULL;
 
-    movq %rcx, %rax
-    imulq $8, %rax
-    addq %rbx, %rax
-    movq %rax, %rcx    # Node * head = table->array[targetIdx]
+    movq %rcx, %rax    # move targetIdx to rax
+    imulq $8, %rax     # targetIdx *= 8(each el in the array is a Node *)
+    addq 24(%rbx), %rax 
+
+    # overwriting rcx is fine here since we won't need it anymore
+    # 24(%rbx) is essentially ** array so at the end of last statement,
+    # rax doesnt have addr of table->array[targetIndex]. if we want the pointer
+    # at this index, we need to dereference it
+
+    movq (%rax), %rcx    # Node * head = table->array[targetIdx]
 
     cmpq $0x0, %rcx    # if (head == NULL)
     je insert_list_empty
 
-    movq %rcx, %r9    # Node * temp = head;
-
 insert_while:
-   cmpq $0x0, %r9     # while (temp != NULL)
+   cmpq $0x0, %rcx     # while (head != NULL)
    je break_insert_while
 
-   movq (%r9), %rdi
-   movq %r10, %rsi
+   movq (%rcx), %rdi  # (%rcx) = temp->word
+   movq %r10, %rsi   # r10 = char * word
 
-   pushq %r9
-   pushq %r9
+   # the only thing we need for future statements is head so we preserve it
+
+   pushq %rcx
+   pushq %rcx
+   pushq %rdx
+   pushq %rdx
 
    call strcmp
 
-   popq %r9
-   popq %r9
+   popq %rdx
+   popq %rdx
+   popq %rcx
+   popq %rcx
 
-   cmpq $0, %rax     # if (strcmp(temp->word, word) == 0)
+   cmpq $0, %rax     # if (strcmp(head->word, word) == 0)
    je insert_match_found
 
-   cmpq $0x0, 16(%r9)  # else if (temp->next == NULL)
+   cmpq $0x0, 16(%rcx)  # else if (head->next == NULL)
    je break_insert_while
+
+   # if both the if and else if statements fail then continue
    jmp continue_insert_while
 
 insert_match_found:
-   cmpq 8(%r9), %r13  # if (temp->value == value)
+   cmpq 8(%rcx), %r13  # if (head->value == value)
    je insert_violation
 
-   movq %r13, 8(%r9)   # temp->value = value
+   movq %r13, 8(%rcx)   # head->value = value
    jmp insert_succ_no_new_word
 
 continue_insert_while:
-   movq 16(%r9), %r9   # temp = temp->next;
+   movq 16(%rcx), %rcx   # head = head->next;
    jmp insert_while
 
 break_insert_while:
-   movq %rdx, 16(%r9)  # temp->next = new;
+   movq %rdx, 16(%rcx)  # head->next = new;
    jmp insert_done
 
 insert_list_empty:
-   movq %rdx, (%rcx)   # table->array[targetIdx] = new;
+   # doing movq %rdx, %rcx is wrong(saying: head = new) - doesn't update anything
+    # but just does so in place and won't update the actual list
+   # doing movq %rdx, (%rcx) will throw seg fault since %rcx is alr 0x0
+
+   movq %rdx, (%rax)   # table->array[targetIdx] = new;
    jmp insert_done
 
 insert_err_word:
    movq $insertErrWord, %rdi
-   call perror
+   call perror         # perror("(insert) error allocating memory for the word field")
    jmp insert_violation
 
 insert_err_node:
    movq $insertErrNode, %rdi
-   call perror
+   call perror         # perror("(insert) error allocating memory for a new node")
    jmp insert_violation
 
 insert_violation:
@@ -500,8 +529,6 @@ insert_succ_no_new_word:
     jmp finish_insert
 
 finish_insert:
-    popq %r15
-    popq %r14
     popq %r13
     popq %r10
     popq %rbx

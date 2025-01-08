@@ -162,27 +162,25 @@ bool insert(Table * table, char * word, long value) {
             // doing head = new won't work
         table->array[targetIdx] = new;
     } else {
-        Node * temp = head;
-
-        while (temp) {
+        while (head) {
             // found the same key
-            if (strcmp(temp->word, word) == 0) {
-                if (temp->value == value) {
+            if (strcmp(head->word, word) == 0) {
+                if (head->value == value) {
                     // if the value is also the same then no changes happen and we return false
                     return false;
                 } else {
                     // the value is different so just update
-                    temp->value = value;
+                    head->value = value;
                     return true;
                 }
-            } else if (temp->next == NULL) {
+            } else if (head->next == NULL) {
                 break;
             }
-            temp = temp->next;
+            head = head->next;
         }
 
         // reach here when we're inserting a new key-value pair that hasn't been seen previously
-        temp->next = new;
+        head->next = new;
     }
 
     table->nWords++;

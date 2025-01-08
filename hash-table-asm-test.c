@@ -51,6 +51,10 @@ int main(int argc, char **argv) {
    test_hash(table);
    printf("Table hash tests passed...\n\n");
 
+   printf("Running table insert tests...\n");
+   test_insert(table);
+   printf("Table insert tests passed...\n\n");
+
    return 0;
 }
 
@@ -95,12 +99,22 @@ void test_hash(Table * table) {
   assert(hash(table, "") == ASM_hash(table, ""));
 }
 
-void test_lookup(Table * table) {
-   
+void test_insert(Table * table) {
+  // brand new key-value pair
+  char *keyOne = "Hello";
+  long valOne = 15;
+  bool insertOne = ASM_insert(table, keyOne, valOne);
+  assert(insertOne);
+  assert(table->nWords == 1);
+
+  // same key-value pair
+  bool insertTwo = ASM_insert(table, keyOne, valOne);
+  assert(!insertTwo);
+  assert(table->nWords == 1);
 }
 
-void test_insert(Table * table) {
-
+void test_lookup(Table * table) {
+   
 }
 
 void test_update(Table * table) {
