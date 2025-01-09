@@ -241,25 +241,34 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     pushq %rbx
 
     cmpq $0x0, %rsi   # if (word == NULL)
-    je lookup_null_word
+    je lookup_violation
 
-    movq %rsi, %rbx    # store word in rbx
+    movq %rsi, %rbx    # rbx = char * word
 
     xorq %rax, %rax
+
+    pushq %rdi
+    pushq %rdi
+
     call ASM_hash
+
+    popq %rdi
+    popq %rdi
+
     movq %rax, %rdx    # long hashNum = hash(table, word)
 
-    movq 24(%rdi), %rcx  # rcx has address of table->array
     movq %rdx, %r8
-    imulq $24, %r8      # offset of 24
-    addq %rcx, %r8      # Node * elem = table->array[hashNum]
+    imulq $8, %r8      # offset of 24
+    addq 24(%rdi), %r8
+    movq (%r8), %r8    # Node * elem = table->array[hashNum]
 
 while_lookup:
     cmpq $0x0, %r8     # if (elem != NULL)
     je break_while_lookup
 
-    movq (%r8), %rdi
-    movq %rbx, %rsi
+    movq (%r8), %rdi   # (%r8) contains pointer to elem->word
+    movq %rbx, %rsi    # rbx = char & word
+
     xorq %rax, %rax
 
     pushq %r8
@@ -280,12 +289,12 @@ while_lookup:
 
 break_while_lookup:
     cmpq $0x0, %r8     # if (elem == NULL)
-    je lookup_null_word
+    je lookup_violation
 
     movq $1, %rax     # return 1(true)
     jmp finish_lookup
 
-lookup_null_word:
+lookup_violation:
     movq $0, %rax      # return 0(false)
     jmp finish_lookup
 
@@ -301,6 +310,65 @@ ASM_get:         # long ASM_get(Table * table, char * word)
     pushq %rbp
     movq %rsp, %rbp
 
+    cmpq $0x0, %rsi
+    je get_violation
+
+    pushq %rdi
+    pushq %rdi
+    pushq %rsi
+    pushq %rsi
+
+    xorq %rax, %rax
+
+    call ASM_hash
+
+    popq %rsi
+    popq %rsi
+    popq %rdi
+    popq %rdi
+
+    movq %rax, %rdx   # long targetIdx = ASM_hash(table, word);
+
+    imulq $8, %rdx
+    addq 24(%rdi), %rdx
+    movq (%rdx), %rdx    # Node * head = table->array[targetIdx]
+
+while_get:
+    cmpq $0x0, %rdx    # while (head != NULL)
+    je get_violation
+
+    xorq %rax, %rax
+
+    # fine to overwrite rdi since we won't be needing it anymore
+    movq (%rdx), %rdi   # (%rdx) has pointer to head->word
+
+    pushq %rsi
+    pushq %rsi
+    pushq %rdx
+    pushq %rdx
+
+    call strcmp
+
+    popq %rdx
+    popq %rdx
+    popq %rsi
+    popq %rsi
+
+    cmpq $0, %rax   # if (strcmp(head->word, word) == 0)
+    je found_key
+
+    movq 16(%rdx), %rdx  # head = head->next
+    jmp while_get
+
+found_key:
+   movq 8(%rdx), %rax   # return head->value
+   jmp finish_get
+
+get_violation:
+    movq $-1, %rax    # return -1
+    jmp finish_get
+
+finish_get:
     leave
     ret
 
