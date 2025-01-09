@@ -731,6 +731,96 @@ ASM_print:        # void ASM_print(Table * table)
     pushq %rbp
     movq %rsp, %rbp
 
+    pushq %rbx
+    pushq %rbx
+    pushq %r10
+    pushq %r10
+
+    cmpq $0x0, %rdi   # if (table != NULL)
+    je finish_print
+
+    movq %rdi, %rbx    # store table in rbx
+
+    movq $0, %r10        # long i = 0;
+    movq 16(%rbx), %r8   # r8 = table->nBuckets
+
+for_print:
+    cmpq %r10, %r8      # while (i < table->nBuckets)
+    jle finish_print
+
+    movq %r10, %rcx
+    imulq $8, %rcx
+    addq 24(%rbx), %rcx
+    movq (%rcx), %rcx    # Node * head = table->array[i];
+
+    cmpq $0x0, %rcx     # if (head != NULL)
+    je continue_for_print
+
+    movq $bucketNumber, %rdi
+    movq %r10, %rsi
+    addq $1, %rsi
+
+    pushq %r8
+    pushq %rcx
+
+    xorq %rax, %rax
+    call printf       # printf("Bucket %d\n", (i + 1));
+
+    popq %rcx
+    popq %r8
+
+while_node_print:
+    cmpq $0x0, %rcx   # while (head != NULL)
+    je continue_for_print
+
+    cmpq $0x0, 16(%rcx)  # if (head->next != NULL)
+    je print_tail_node
+
+    movq $nodeFormatOne, %rdi
+    movq (%rcx), %rsi
+    movq 8(%rcx), %rdx
+
+    pushq %r8
+    pushq %rcx
+
+    xorq %rax, %rax
+    call printf     # printf("Node(Key=%s, Value=%ld)->", head->word, head->value);
+
+    popq %rcx
+    popq %r8
+
+    jmp continue_while_node_print
+
+continue_while_node_print:
+    movq 16(%rcx), %rcx    # head = head->next
+    jmp while_node_print
+
+print_tail_node:
+    movq $nodeFormatTwo, %rdi
+    movq (%rcx), %rsi
+    movq 8(%rcx), %rdx
+
+    pushq %r8
+    pushq %rcx
+
+    xorq %rax, %rax
+    call printf   # printf("Node(Key=%s, Value=%ld)\n", head->word, head->value)
+
+    popq %rcx
+    popq %r8
+
+    jmp continue_while_node_print
+
+continue_for_print:
+    addq $1, %r10
+    jmp for_print
+
+finish_print:
+    popq %r10
+    popq %r10
+    popq %rbx
+    popq %rbx
+
     leave
     ret
 
