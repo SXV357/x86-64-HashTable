@@ -63,6 +63,19 @@ int main(int argc, char **argv) {
    test_get(table);
    printf("Table get tests passed...\n\n");
 
+   printf("Running table delete tests...\n");
+   test_delete(table);
+   printf("Table delete tests passed...\n\n");
+
+   /**
+   printf("Running table update tests...\n");
+   test_update(table);
+   printf("Table update tests passed...\n\n");
+
+   printf("Running table clear test...\n");
+   test_clear(table)l
+   printf("Table clear test passed...\n"; **/
+
    return 0;
 }
 
@@ -136,8 +149,6 @@ void test_insert(Table * table) {
 
   assert(table->nWords == 17);
 
-  // insert invalid values
-
   // null key
   bool insertInvalidOne = ASM_insert(table, NULL, 15);
   assert(!insertInvalidOne);
@@ -179,13 +190,68 @@ void test_get(Table * table) {
 }
 
 void test_update(Table * table) {
+  // update value of an existing key
+  bool updateOne = ASM_update(table, "apple", 192021);
+  assert(updateOne);
+  assert(table->nWords == 14);
 
+  // update value of a non-existent key
+  bool updateTwo = ASM_update(table, "Kohli", 81);
+  assert(!updateTwo);
+  assert(table->nWords == 15);
+
+  // invalid values
+  bool updateThree = ASM_update(table, NULL, 67);
+  assert(!updateThree);
+
+  bool updateFour = ASM_update(table, "elephant", -25);
+  assert(!updateFour);
+
+  bool updateFive = ASM_update(table, "SMG", -112);
+  assert(!updateFive);
 }
 
 void test_delete(Table * table) {
+  // delete head in bucket with > 1 node
+  char * keyOne = "nest";
+  long idxOne = ASM_hash(table, keyOne);
+  bool deleteOne = ASM_delete(table, keyOne);
+  assert(deleteOne);
+  assert(table->nWords == 16);
+  assert(!strcmp(table->array[idxOne]->word, "yarn"));
 
+  // delete non-head in bucket with > 1 node
+  char *keyTwo = "under";
+  long idxTwo = ASM_hash(table, keyTwo);
+  bool deleteTwo = ASM_delete(table, keyTwo);
+  assert(deleteTwo);
+  assert(table->nWords == 15);
+  assert(!strcmp(table->array[idxTwo]->word, "boat"));
+
+  // delete only node in a bucket
+  char *keyThree = "banana";
+  long idxThree = ASM_hash(table, keyThree);
+  bool deleteThree = ASM_delete(table, keyThree);
+  assert(deleteThree);
+  assert(table->nWords == 14);
+  assert(table->array[idxThree] == NULL);
+
+  // delete non-existent key
+  bool deleteFour = ASM_delete(table, "RPG");
+  assert(!deleteFour);
+  assert(table->nWords == 14);
+
+  // delete NULL key
+  bool deleteFive = ASM_delete(table, NULL);
+  assert(!deleteFive);
+  assert(table->nWords == 14);
 }
 
 void test_clear(Table * table) {
-   
+   ASM_clear(table);
+   for (int i = 0; i < table->nBuckets; i++) {
+    assert(table->array[i] == NULL);
+   }
+
+   assert(table->nWords == 0);
 }

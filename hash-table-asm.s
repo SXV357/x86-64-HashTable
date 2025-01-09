@@ -610,6 +610,111 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
     pushq %rbp
     movq %rsp, %rbp
 
+    pushq %rbx
+    pushq %rbx
+    pushq %r10
+    pushq %r10
+    pushq %r13
+    pushq %r14
+
+    cmpq $0x0, %rsi    # if (word == NULL)
+    je delete_violation
+
+    pushq %rdi
+    pushq %rdi
+    pushq %rsi
+    pushq %rsi
+
+    xorq %rax, %rax
+    call ASM_hash
+
+    popq %rsi
+    popq %rsi
+    popq %rdi
+    popq %rdi
+
+    movq %rax, %rdx   # long targetIdx = ASM_hash(table, word)
+    imulq $8, %rdx
+    addq 24(%rdi), %rdx
+
+    movq %rdx, %r14    # saving this here for the case when match is found and prev = NULL
+
+    movq (%rdx), %rdx    # Node * head = table->array[targetIdx];
+    movq $0x0, %rcx    # Node * prev = NULL;
+    movq $0, %r8       # bool found = false;
+
+    movq %rdi, %rbx   # rbx = table
+    movq %rsi, %r10   # r10 = word
+
+while_delete:
+    cmpq $0x0, %rdx   # while (head != NULL)
+    je break_while_delete
+
+    movq (%rdx), %rdi   # (%rdx) contains pointer to head->word
+    movq %r10, %rsi     # r10 = char * word
+
+    pushq %rdx
+    pushq %rdx
+    pushq %rcx
+    pushq %r8
+
+    xorq %rax, %rax
+    call strcmp
+
+    popq %r8
+    popq %rcx
+    popq %rdx
+    popq %rdx
+
+    cmpq $0, %rax    # if (strcmp(head->word, word) == 0)
+    je delete_match_found
+
+    movq %rdx, %rcx   # prev = head
+    movq 16(%rdx), %rdx  # head = head->next
+    jmp while_delete
+
+delete_match_found:
+   movq $1, %r8     # found = true
+   movq %rdx, %r13  # Node * temp = head
+
+   cmpq $0x0, %rcx   # if (prev == NULL)
+   je delete_prev_null
+
+   movq 16(%rdx), %rax
+   movq %rax, 16(%rcx)  # prev->next = head->next
+
+   jmp delete_temp
+
+delete_prev_null:
+   movq 16(%rdx), %rax
+   movq %rax, (%r14)   # table->array[targetIdx] = head->next;
+
+delete_temp:
+  movq %r13, %rdi
+  call free         # free(temp)
+  movq $0x0, %r13   # temp = NULL;
+  jmp break_while_delete
+
+break_while_delete:
+   cmpq $0, %r8      # if (!found)
+   je delete_violation
+
+   subq $1, 8(%rbx)   # table->nWords--;
+   movq $1, %rax      # return 1(true)
+   jmp finish_delete
+
+delete_violation:
+    movq $0, %rax     # return 0(false)
+    jmp finish_delete
+
+finish_delete:
+    popq %r14
+    popq %r13
+    popq %r10
+    popq %r10
+    popq %rbx
+    popq %rbx
+
     leave
     ret
 
