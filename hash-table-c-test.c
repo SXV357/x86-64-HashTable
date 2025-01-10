@@ -7,6 +7,7 @@
 #include "hash-table-c.h"
 
 void test_init();
+void test_hash(Table * table);
 
 void test_lookup(Table * table);
 void test_insert(Table * table);
@@ -30,6 +31,10 @@ int main(int argc, char **argv) {
     assert(table->nBuckets == maxWords + 1);
     assert(table->array);
     printf("Actual table initialization test passed...\n\n");
+
+    printf("Running table hash tests...\n");
+    test_hash(table);
+    printf("Table hash tests passed...\n\n");
     
     printf("Running table insertion tests...\n");
     test_insert(table);
@@ -56,6 +61,23 @@ int main(int argc, char **argv) {
     printf("Table clear tests passed...\n\n");
 
     return 0;
+}
+
+void test_hash(Table * table) {
+    // invalid values
+    assert(hash(table, NULL) == -1);
+    assert(hash(table, "") == -1);
+    assert(hash(NULL, "something") == -1);
+    assert(hash(NULL, "") == -1);
+    assert(hash(NULL, NULL) == -1);
+
+    // general cases
+    char *words[] = {"hello", "bye", "see", "flag"};
+    long indices[4] = {22, 92, 132, 20};
+
+    for (int i = 0; i < 4; i++) {
+        assert(hash(table, words[i]) == indices[i]);
+    }
 }
 
 void test_init() {
@@ -112,8 +134,6 @@ void test_insert(Table * table) {
 
     assert(table->nWords == 17);
 
-    // insert invalid values
-
     // key is NULL
     bool insertInvalidOne = insert(table, NULL, 15);
     assert(!insertInvalidOne);
@@ -123,6 +143,18 @@ void test_insert(Table * table) {
     bool insertInvalidTwo = insert(table, "hello", -57);
     assert(!insertInvalidTwo);
     assert(table->nWords == 17);
+
+    // mix of invalid insert arguments
+    bool insertInvalidThree = insert(table, "", 15);
+    bool insertInvalidFour = insert(table, "", -10);
+    bool insertInvalidFive = insert(table, NULL, -110);
+    bool insertInvalidSix = insert(NULL, "something", 42);
+    bool insertInvalidSeven = insert(NULL, "", 32);
+    bool insertInvalidEight = insert(NULL, "", -23);
+    bool insertInvalidNine = insert(NULL, NULL, 94);
+    bool insertInvalidTen = insert(NULL, NULL, -5);
+
+    assert((!insertInvalidThree) && (!insertInvalidFour) && (!insertInvalidFive) && (!insertInvalidSix) && (!insertInvalidSeven) && (!insertInvalidEight) && (!insertInvalidNine) && (!insertInvalidTen));
 }
 
 void test_lookup(Table * table) {
@@ -136,9 +168,14 @@ void test_lookup(Table * table) {
     bool lookupTwo = lookup(table, nonExistent);
     assert(!lookupTwo);
 
-    // NULL key
+    // invalid values
     bool lookupThree = lookup(table, NULL);
-    assert(!lookupThree);
+    bool lookupFour = lookup(table, "");
+    bool lookupFive = lookup(NULL, "banana");
+    bool lookupSix = lookup(NULL, "diablo");
+    bool lookupSeven = lookup(NULL, NULL);
+
+    assert((!lookupThree) && (!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
 }
 
 void test_update(Table * table) {
@@ -162,6 +199,19 @@ void test_update(Table * table) {
 
     bool updateFour = update(table, "elephant", -100);
     assert(!updateFour);
+
+    // mix of other invalid update args
+    bool updateFive = update(table, "", 68);
+    bool updateSix = update(table, "", -76);
+    bool updateSeven = update(table, NULL, -43);
+    bool updateEight = update(NULL, "", 90);
+    bool updateNine = update(NULL, "", -36);
+    bool updateTen = update(NULL, "blabla", 11);
+    bool updateEleven = update(NULL, "ajdhjkfe", 34);
+    bool updateTwelve = update(NULL, NULL, 1111);
+    bool updateThirteen = update(NULL, NULL, -765);
+
+    assert((!updateFive) && (!updateSix) && (!updateSeven) && (!updateEight) && (!updateNine) && (!updateTen) && (!updateEleven) && (!updateTwelve) && (!updateThirteen));
 }
 
 void test_get(Table * table) {
@@ -173,14 +223,17 @@ void test_get(Table * table) {
     long getTwo = get(table, "blablah");
     assert(getTwo == -1);
 
-    // invalid key
+    // invalid values
     long getThree = get(table, NULL);
-    assert(getThree == -1);
+    long getFour = get(table, "");
+    long getFive = get(NULL, "carrot");
+    long getSix = get(NULL, "blablah");
+    long getSeven = get(NULL, NULL);
+
+    assert(getThree + getFour + getFive + getSix + getSeven == -5);
 }
 
-void test_delete(Table * table) {
-    // delete existent keys
-    
+void test_delete(Table * table) {    
     // delete head in a bucket with > 1 node
     long idxOne = hash(table, "nest");
     bool deleteOne = delete(table, "nest");
@@ -211,6 +264,14 @@ void test_delete(Table * table) {
     bool deleteFive = delete(table, NULL);
     assert(!deleteFive);
     assert(table->nWords == 15);
+
+    // mix of other invalid delete args
+    bool deleteSix = delete(table, "");
+    bool deleteSeven = delete(NULL, "igloo");
+    bool deleteEight = delete(NULL, "");
+    bool deleteNine = delete(NULL, "AK47");
+    
+    assert((!deleteSix) && (!deleteSeven) && (!deleteEight) && (!deleteNine));
 }
 
 void test_clear(Table * table) {

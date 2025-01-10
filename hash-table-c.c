@@ -4,11 +4,6 @@
 #include <string.h>
 #include "hash-table-c.h"
 
-// TO DOS
-    // update them to make it more compatible with assembly
-    // assembly implementation
-    // optimizations for assembly implementation
-
 Table * init(long maxWords) {
     long primeNumbers[] = { 67, 131, 257, 521, 1031, 2053, 4099, 8209, 16411, 32771, 65537, 131073 };
     long nPrimeNumbers = sizeof(primeNumbers)/sizeof(long);
@@ -59,8 +54,9 @@ Table * init(long maxWords) {
 }
 
 long hash(Table * table, char * word) {
-    // hashes the word passed in and returns the index of the bucket it's located in
-    if ((word == NULL) || (strlen(word) == 0)) {
+    // check for nullity
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0)) {
+        // negative index is appropriate here since such indices are non-existent for arrays
         return -1;
     }
     
@@ -84,7 +80,7 @@ long hash(Table * table, char * word) {
  * Looks up the key specified by the word parameter in the hash table and return true if it exists
  */
 bool lookup(Table * table, char * word) {
-    if (word == NULL) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0)) {
         return false;
     }
 
@@ -98,17 +94,12 @@ bool lookup(Table * table, char * word) {
       elem = elem->next;
     }
 
-    if ( elem == NULL) {
-      //Not found
-      return false;
-    }
-
-    return true;
+    return elem == NULL ? false : true;
 }
 
 // gets the value associated with a given key in the hash table
 long get(Table * table, char * word) {
-    if (word == NULL) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0)) {
         return -1;
     }
 
@@ -130,8 +121,10 @@ bool insert(Table * table, char * word, long value) {
     // cases to handle
         // we try inserting the exact same key-value pair
         // we insert the same key, but with a different value
+    
+    // range of values allowed: [0, inf)
 
-    if ((table->nWords > table->maxWords) || (word == NULL) || (value < 0)) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0) || (value < 0) || (table->nWords > table->maxWords)) {
         return false;
     }
 
@@ -189,7 +182,7 @@ bool insert(Table * table, char * word, long value) {
 
 bool delete(Table * table, char * word) {
     // would just be a simple linked list deletion since we're not using probing as the collision handling mechanism
-    if (word == NULL) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0)) {
         return false;
     }
 
@@ -231,7 +224,7 @@ bool delete(Table * table, char * word) {
 
 bool update(Table * table, char * word, long value) {
     // finds the key associated with "char * word", updates its value and returns true if successful
-    if ((word == NULL) || (value < 0)) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0) || (value < 0)) {
         return false;
     }
 

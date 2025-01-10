@@ -6,6 +6,7 @@
         "assert.h": "c",
         "stdlib.h": "c",
         "ht.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "stdio.h": "c"
     }
 }
