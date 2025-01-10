@@ -169,7 +169,7 @@ void test_lookup(Table * table) {
    assert(!lookupTwo);
 
    // NULL key
-   bool lookupThree = lookup(table, NULL);
+   bool lookupThree = ASM_lookup(table, NULL);
    assert(!lookupThree);
 }
 

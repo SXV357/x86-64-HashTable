@@ -978,7 +978,7 @@ for_clear:
     cmpq %rsi, %rdx   # while (i < table->nBuckets)
     jle break_for_clear
 
-    movq %rdx, %rcx
+    movq %rsi, %rcx
     imulq $8, %rcx
     addq 24(%rbx), %rcx
 
