@@ -281,18 +281,15 @@ void print(Table * table) {
         for (int i = 0; i < table->nBuckets; i++) {
             Node * head = table->array[i];
 
-            // only print the contents if the bucket isn't NULL
-            if (head) {
-                printf("Bucket %d\n", (i + 1));
+            printf("Bucket %d\n", (i + 1));
 
-                while (head) {
-                    if (head->next != NULL) {
-                        printf("Node(Key=%s, Value=%ld)->", head->word, head->value);
-                    } else {
-                        printf("Node(Key=%s, Value=%ld)\n", head->word, head->value);
-                    }
-                    head = head->next;
+            while (head != NULL) {
+                if (head->next != NULL) {
+                    printf("Node(Key=%s, Value=%ld)->", head->word, head->value);
+                } else {
+                    printf("Node(Key=%s, Value=%ld)\n", head->word, head->value);
                 }
+                head = head->next;
             }
         }
     }
