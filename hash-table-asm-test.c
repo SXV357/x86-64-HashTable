@@ -71,10 +71,9 @@ int main(int argc, char **argv) {
    test_update(table);
    printf("Table update tests passed...\n\n");
 
-   /**
    printf("Running table clear test...\n");
    test_clear(table);
-   printf("Table clear test passed...\n"; **/
+   printf("Table clear test passed...\n");
 
    return 0;
 }

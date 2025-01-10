@@ -963,5 +963,68 @@ ASM_clear:        # void ASM_clear(Table * table)
     pushq %rbp
     movq %rsp, %rbp
 
+    pushq %rbx
+    pushq %rbx
+
+    cmpq $0x0, %rdi   # if (table != NULL)
+    je finish_clear
+
+    movq %rdi, %rbx   # store table in rbx
+
+    movq $0, %rsi     # long i = 0;
+    movq 16(%rbx), %rdx  # rdx: table->nBuckets
+
+for_clear:
+    cmpq %rsi, %rdx   # while (i < table->nBuckets)
+    jle break_for_clear
+
+    movq %rdx, %rcx
+    imulq $8, %rcx
+    addq 24(%rbx), %rcx
+
+    movq %rcx, %r8      # r8 has address of Node *
+    movq (%rcx), %rcx   # Node * head = table->array[i]
+    movq $0x0, %r9      # Node * temp = NULL;
+
+while_clear:
+   cmpq $0x0, %rcx    # while (head != NULL)
+   je break_while_clear
+
+   movq %rcx, %r9    # temp = head
+   movq 16(%rcx), %rcx  # head = head->next
+
+   movq %r9, %rdi
+
+   pushq %rsi
+   pushq %rdx
+   pushq %r8
+   pushq %r9
+   pushq %rcx
+   pushq %rcx
+
+   call free    # free(temp);
+
+   popq %rcx
+   popq %rcx
+   popq %r9
+   popq %r8
+   popq %rdx
+   popq %rsi
+
+   jmp while_clear
+
+break_while_clear:
+    movq $0x0, (%r8)  # table->array[i] = NULL;
+    addq $1, %rsi
+    jmp for_clear
+
+break_for_clear:
+    movq $0, 8(%rbx)  # table->nWords = 0;
+    jmp finish_clear
+
+finish_clear:
+    popq %rbx
+    popq %rbx
+
     leave
     ret
