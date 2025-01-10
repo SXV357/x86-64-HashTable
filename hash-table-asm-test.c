@@ -66,14 +66,14 @@ int main(int argc, char **argv) {
    printf("Running table delete tests...\n");
    test_delete(table);
    printf("Table delete tests passed...\n\n");
-
-   /**
+   
    printf("Running table update tests...\n");
    test_update(table);
    printf("Table update tests passed...\n\n");
 
+   /**
    printf("Running table clear test...\n");
-   test_clear(table)l
+   test_clear(table);
    printf("Table clear test passed...\n"; **/
 
    return 0;

@@ -723,6 +723,134 @@ ASM_update:       # bool ASM_update(Table * table, char * word, long value);
     pushq %rbp
     movq %rsp, %rbp
 
+    pushq %rbx
+    pushq %rbx
+    pushq %r12
+    pushq %r13
+
+    cmpq $0x0, %rsi   # if (word == NULL)
+    je update_violation
+
+    cmpq $0, %rdx     # if (value < 0)
+    jl update_violation
+
+    pushq %rdi
+    pushq %rsi
+    pushq %rdx
+    pushq %rdx
+
+    xorq %rax, %rax
+    call ASM_hash
+
+    popq %rdx
+    popq %rdx
+    popq %rsi
+    popq %rdi
+
+    imulq $8, %rax
+    addq 24(%rdi), %rax
+
+    movq %rax, %rcx      # rcx holds address of the pointer to the node
+    movq (%rax), %r8     # Node * elem = table->array[hashNum]
+
+    movq %rdi, %rbx     # rbx = table
+    movq %rsi, %r12     # r12 = char * word
+    movq %rdx, %r13     # r13 = long value
+
+while_update:
+    cmpq $0x0, %r8     # while (elem != NULL)
+    je break_while_update
+
+    movq (%r8), %rdi   # (%r8) contains addr to elem->word
+    movq %r12, %rsi    # r12 contains char * word
+
+    pushq %rcx
+    pushq %r8
+
+    xorq %rax, %rax
+    call strcmp
+
+    popq %r8
+    popq %rcx
+
+    cmpq $0, %rax     # if strcmp(elem->word, word) == 0
+    je update_match_found
+
+    cmpq $0x0, 16(%r8)   # else if (elem->next == NULL)
+    je break_while_update
+
+    movq 16(%r8), %r8    # elem = elem->next
+    jmp while_update
+
+update_match_found:
+    movq %r13, 8(%r8)  # elem->value = value
+    movq $1, %rax      # return true
+    jmp finish_update
+
+break_while_update:
+    movq (%rbx), %rax    # (%rbx) has table->maxWords
+    cmpq 8(%rbx), %rax   # if (table->nWords > table->maxWords)
+    jl update_violation
+
+    movq $24, %rdi    # 24 = sizeof(Node)
+
+    pushq %rcx
+    pushq %r8
+
+    xorq %rax, %rax
+
+    call malloc      # Node * e = (Node *) malloc(sizeof(Node))
+
+    popq %r8
+    popq %rcx
+
+    cmpq $0x0, %rax   # if (e == NULL)
+    je update_violation
+
+    movq %r12, %rdi
+    movq %rax, %r9   # Node * e = (Node *) malloc(sizeof(Node))
+
+    pushq %rcx
+    pushq %r8
+    pushq %r9
+    pushq %r9
+
+    xorq %rax, %rax
+    call strdup
+
+    popq %r9
+    popq %r9
+    popq %r8
+    popq %rcx
+
+    movq %rax, (%r9)   # e->word = strdup(word)
+    movq %r13, 8(%r9)  # e->value = value;
+    movq $0x0, 16(%r9)  # e->next = NULL;
+
+    cmpq $0x0, %r8    # if (elem == NULL)
+    je update_empty_list
+
+    movq %r9, 16(%r8)  # elem->next = e
+    jmp update_end
+
+update_empty_list:
+    movq %r9, (%rcx)   # table->array[hashNum] = e;
+    jmp update_end
+
+update_end:
+    addq $1, 8(%rbx)    # table->nWords++;
+    jmp update_violation
+
+update_violation:
+    movq $0, %rax      # return 0(false)
+    jmp finish_update
+
+finish_update:
+    popq %r13
+    popq %r12
+    popq %rbx
+    popq %rbx
+
     leave
     ret
 
