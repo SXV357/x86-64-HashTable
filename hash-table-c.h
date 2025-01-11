@@ -26,4 +26,4 @@ bool delete(Table * table, char * word); // finds the word and deletes it
 long get(Table * table, char * word); // gets the value associated with a word
 
 void print(Table * table); // prints all the key value pairs in the table
-void clear(Table * table); // clears the key value pairs in all buckets in the hash table
+bool clear(Table * table); // clears the key value pairs in all buckets in the hash table

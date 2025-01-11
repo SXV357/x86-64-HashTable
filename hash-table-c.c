@@ -289,22 +289,25 @@ void print(Table * table) {
 }
 
 // clears out the contents of all buckets in the hash table
-void clear(Table * table) {
-    if (table != NULL) {
-        for (int i = 0; i < table->nBuckets; i++) {
-            Node * head = table->array[i];
-            Node * temp;
+bool clear(Table * table) {
+    if (table == NULL) {
+        return false;
+    }
 
-            while (head) {
-                temp = head;
-                head = head->next;
-                free(temp);
-            }
+    for (int i = 0; i < table->nBuckets; i++) {
+        Node * head = table->array[i];
+        Node * temp;
 
-            table->array[i] = NULL;
+        while (head) {
+            temp = head;
+            head = head->next;
+            free(temp);
         }
 
-        // all key-value pairs have been deleted
-        table->nWords = 0;
+        table->array[i] = NULL;
     }
+
+    // all key-value pairs have been deleted
+    table->nWords = 0;
+    return true;
 }

@@ -16,7 +16,7 @@ extern bool ASM_delete(Table * table, char * word);
 extern bool ASM_update(Table * table, char * word, long value);
 
 extern void ASM_print(Table * table);
-extern void ASM_clear(Table * table);
+extern bool ASM_clear(Table * table);
 
 // function forward declarations
 void test_hash(Table * table);
