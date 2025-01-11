@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
    printf("Running table delete tests...\n");
    test_delete(table);
    printf("Table delete tests passed...\n\n");
-   
+
    printf("Running table update tests...\n");
    test_update(table);
    printf("Table update tests passed...\n\n");
@@ -115,8 +115,13 @@ void test_hash(Table * table) {
   assert(cHashVal == asmHashVal);
 
   // test for invalid word argument
-  assert(hash(table, NULL) == ASM_hash(table, NULL));
-  assert(hash(table, "") == ASM_hash(table, ""));
+  assert(ASM_hash(table, NULL) == -1);
+  assert(ASM_hash(table, "") == -1);
+
+  // test for NULL table
+  assert(ASM_hash(NULL, "something") == -1);
+  assert(ASM_hash(NULL, "") == -1);
+  assert(ASM_hash(NULL, NULL) == -1);
 }
 
 void test_insert(Table * table) {
@@ -156,7 +161,20 @@ void test_insert(Table * table) {
   // negative value
   bool insertInvalidTwo = ASM_insert(table, "hello", -30);
   assert(!insertInvalidTwo);
-  assert(table->nWords == 17);
+  assert(table->nWords == 17); 
+
+  // NULL table and empty word tests
+  bool insertInvalidThree = ASM_insert(table, "", 15);
+  bool insertInvalidFour = ASM_insert(table, "", -10);
+  bool insertInvalidFive = ASM_insert(table, NULL, -110);
+  bool insertInvalidSix = ASM_insert(NULL, "something", 42);
+  bool insertInvalidSeven = ASM_insert(NULL, "", 32);
+  bool insertInvalidEight = ASM_insert(NULL, "", -23);
+  bool insertInvalidNine = ASM_insert(NULL, NULL, 94);
+  bool insertInvalidTen = ASM_insert(NULL, NULL, -5);
+
+  assert((!insertInvalidThree) && (!insertInvalidFour) && (!insertInvalidFive) && (!insertInvalidSix) && 
+ (!insertInvalidSeven) && (!insertInvalidEight) && (!insertInvalidNine) && (!insertInvalidTen));
 }
 
 void test_lookup(Table * table) {
@@ -171,6 +189,14 @@ void test_lookup(Table * table) {
    // NULL key
    bool lookupThree = ASM_lookup(table, NULL);
    assert(!lookupThree);
+
+   // NULL table and empty word tests
+   bool lookupFour = ASM_lookup(NULL, "banana");
+   bool lookupFive = ASM_lookup(NULL, NULL);
+   bool lookupSix = ASM_lookup(NULL, "");
+   bool lookupSeven = ASM_lookup(table, "");
+
+   assert((!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
 }
 
 void test_get(Table * table) {
@@ -186,6 +212,14 @@ void test_get(Table * table) {
   long getThree = ASM_get(table, NULL);
   assert(getThree == -1);
 
+  // NULL table and empty key tests
+  long getFour = ASM_get(table, "");
+  long getFive = ASM_get(NULL, "carrot");
+  long getSix = ASM_get(NULL, "something");
+  long getSeven = ASM_get(NULL, NULL);
+  long getEight = ASM_get(NULL, "");
+
+  assert(getFour + getFive + getSix + getSeven + getEight == -5);
 }
 
 void test_update(Table * table) {
@@ -206,8 +240,23 @@ void test_update(Table * table) {
   bool updateFour = ASM_update(table, "elephant", -25);
   assert(!updateFour);
 
-  bool updateFive = ASM_update(table, "SMG", -112);
-  assert(!updateFive);
+  bool updateCurr = ASM_update(table, "SMG", -112);
+  assert(!updateCurr);
+
+  // test NULL table and empty string
+
+  bool updateFive = ASM_update(table, "", 68);
+  bool updateSix = ASM_update(table, "", -76);
+  bool updateSeven = ASM_update(table, NULL, -43);
+  bool updateEight = ASM_update(NULL, "", 90);
+  bool updateNine = ASM_update(NULL, "", -36);
+  bool updateTen = ASM_update(NULL, "blabla", 11);
+  bool updateEleven = ASM_update(NULL, "ajdhjkfe", 34);
+  bool updateTwelve = ASM_update(NULL, NULL, 1111);
+  bool updateThirteen = ASM_update(NULL, NULL, -765);
+
+  assert((!updateFive) && (!updateSix) && (!updateSeven) && (!updateEight) && (!updateNine) && 
+  (!updateTen) && (!updateEleven) && (!updateTwelve) && (!updateThirteen));
 }
 
 void test_delete(Table * table) {
@@ -244,10 +293,23 @@ void test_delete(Table * table) {
   bool deleteFive = ASM_delete(table, NULL);
   assert(!deleteFive);
   assert(table->nWords == 14);
+
+  // NULL table and empty word tests
+  bool deleteSix = ASM_delete(table, "");
+  bool deleteSeven = ASM_delete(NULL, "banana");
+  bool deleteEight = ASM_delete(NULL, "");
+  bool deleteNine = ASM_delete(NULL, "Rampage");
+
+  assert((!deleteSix) && (!deleteSeven) && (!deleteEight) && (!deleteNine));
 }
 
 void test_clear(Table * table) {
-   ASM_clear(table);
+   // NULL table
+   bool clearOne = ASM_clear(NULL);
+   assert(!clearOne);
+
+   bool clearTwo = ASM_clear(table);
+   assert(clearTwo);
    for (int i = 0; i < table->nBuckets; i++) {
     assert(table->array[i] == NULL);
    }
