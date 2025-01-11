@@ -8,6 +8,7 @@
         "ht.h": "c",
         "stdbool.h": "c",
         "stdio.h": "c",
-        "hash-table-c-chain.h": "c"
+        "hash-table-c-chain.h": "c",
+        "hash-table-c-dhash.h": "c"
     }
 }
