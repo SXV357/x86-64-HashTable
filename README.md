@@ -1,2 +1,5 @@
 # x86-64-HashTable
-Implements a hash table in x86-64 Assembly
+Implements 2 different versions of a hash table in x86-64 Assembly using the following collision handling mechanisms:
+
+- Chaining
+- Quadratic probing
