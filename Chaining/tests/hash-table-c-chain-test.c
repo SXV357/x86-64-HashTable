@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "hash-table-c.h"
+#include "src/hash-table-c-chain.h"
 
 void test_init();
 void test_hash(Table * table);

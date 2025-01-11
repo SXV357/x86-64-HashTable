@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
-#include "hash-table-c.h"
+#include "src/hash-table-c-chain.h"
 
 // functions defined in the assembly implementation
 extern Table * ASM_init(long maxWords);
