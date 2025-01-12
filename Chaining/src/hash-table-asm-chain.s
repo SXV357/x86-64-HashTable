@@ -600,8 +600,7 @@ insert_while:
    cmpq $0x0, 16(%rcx)  # else if (head->next == NULL)
    je break_insert_while
 
-   # if both the if and else if statements fail then continue
-   jmp continue_insert_while
+   jmp continue_insert_while # if both the if and else if statements fail then continue
 
 insert_match_found:
    cmpq 8(%rcx), %r13  # if (head->value == value)
