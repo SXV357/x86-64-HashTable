@@ -976,6 +976,9 @@ for_print:
     addq 24(%rbx), %rcx
     movq (%rcx), %rcx    # Node * head = table->array[i];
 
+    cmpq $0x0, %rcx     # if (head != NULL)
+    je continue_for_print
+
     movq $bucketNumber, %rdi
     movq %r10, %rsi
     addq $1, %rsi

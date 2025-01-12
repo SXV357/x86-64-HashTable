@@ -10,6 +10,7 @@
         "stdio.h": "c",
         "hash-table-c-chain.h": "c",
         "hash-table-c-dhash.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "_stdio.h": "c"
     }
 }

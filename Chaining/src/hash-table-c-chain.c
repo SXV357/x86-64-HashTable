@@ -274,15 +274,17 @@ void print(Table * table) {
         for (int i = 0; i < table->nBuckets; i++) {
             Node * head = table->array[i];
 
-            printf("Bucket %d\n", (i + 1));
+            if (head != NULL) {
+                printf("Bucket %d\n", (i + 1));
 
-            while (head != NULL) {
-                if (head->next != NULL) {
-                    printf("Node(Key=%s, Value=%ld)->", head->word, head->value);
-                } else {
-                    printf("Node(Key=%s, Value=%ld)\n", head->word, head->value);
+                while (head != NULL) {
+                    if (head->next != NULL) {
+                        printf("Node(Key=%s, Value=%ld)->", head->word, head->value);
+                    } else {
+                        printf("Node(Key=%s, Value=%ld)\n", head->word, head->value);
+                    }
+                    head = head->next;
                 }
-                head = head->next;
             }
         }
     }
