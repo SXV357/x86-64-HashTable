@@ -666,8 +666,8 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
 
     pushq %rbx
     pushq %rbx
-    pushq %r10
-    pushq %r10
+    pushq %r12
+    pushq %r12
     pushq %r13
     pushq %r14
 
@@ -717,14 +717,14 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
     movq $0, %r8       # bool found = false;
 
     movq %rdi, %rbx   # rbx = table
-    movq %rsi, %r10   # r10 = word
+    movq %rsi, %r12   # r12 = word
 
 while_delete:
     cmpq $0x0, %rdx   # while (head != NULL)
     je break_while_delete
 
     movq (%rdx), %rdi   # (%rdx) contains pointer to head->word
-    movq %r10, %rsi     # r10 = char * word
+    movq %r12, %rsi     # r10 = char * word
 
     pushq %rdx
     pushq %rdx
@@ -762,9 +762,19 @@ delete_prev_null:
    movq 16(%rdx), %rax
    movq %rax, (%r14)   # table->array[targetIdx] = head->next;
 
+   jmp delete_temp
+
 delete_temp:
   movq %r13, %rdi
-  call free         # free(temp)
+
+  pushq %r8       # we need to do this since we compare to r8 later
+  pushq %r8
+
+  call free         # free(temp);
+
+  popq %r8
+  popq %r8
+
   movq $0x0, %r13   # temp = NULL;
   jmp break_while_delete
 
@@ -783,8 +793,8 @@ delete_violation:
 finish_delete:
     popq %r14
     popq %r13
-    popq %r10
-    popq %r10
+    popq %r12
+    popq %r12
     popq %rbx
     popq %rbx
 
