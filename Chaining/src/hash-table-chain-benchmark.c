@@ -16,19 +16,15 @@ FILE *wordFp; // FILE pointer for the 1000w.txt file
 
 // ASM functions that will be benchmarked
 extern Table * ASM_init(long maxWords);
-extern long ASM_hash(Table * table, char * word);
 extern bool ASM_insert(Table * table, char * word, long value);
 extern bool ASM_lookup(Table * table, char * word);
 extern bool ASM_delete(Table * table, char * word);
-extern void ASM_print(Table * table);
 
 // forward function declarations
 char ** load_non_existent_words();
 char ** get_random_existent_words(FILE *);
-void print_bucket(Table *, long);
 void benchmark_insert(Table *);
-void benchmark_lookup(Table *, char **);
-void benchmark_delete(Table *, char **);
+long long benchmark_lookup_and_delete(Table *, char **, bool (*)(Table *, char *), bool);
 
 int main(int argc, char **argv) {
     srand(time(NULL)); // seed random number generator
@@ -41,33 +37,31 @@ int main(int argc, char **argv) {
 
     printf("Hash Table initialized...\n\n");
 
-    // wordFp file pointer is opened as part of this benchmark function
+    // wordFp file pointer is opened as part of this ben
     benchmark_insert(table);
 
     char ** non_existent_words = load_non_existent_words();
-    benchmark_lookup(table, non_existent_words);
-    benchmark_delete(table, non_existent_words);
+    char ** random_existent_words = get_random_existent_words(wordFp);
+
+    long long existent_lookup_total_ns = benchmark_lookup_and_delete(table, random_existent_words, ASM_lookup, true);
+
+    long long non_existent_lookup_total_ns = benchmark_lookup_and_delete(table, non_existent_words, ASM_lookup, false);
+
+    long long existent_delete_total_ns = benchmark_lookup_and_delete(table, random_existent_words, ASM_delete, true);
+
+    long long non_existent_delete_total_ns = benchmark_lookup_and_delete(table, non_existent_words, ASM_delete, false);
+
+
+    double existentLookupAvgTime = ((double) existent_lookup_total_ns / N_NON_EXISTENT) / 1000000000.0;
+    double nonExistentLookupAvgTime = ((double) non_existent_lookup_total_ns / N_NON_EXISTENT) / 1000000000.0;
+    double existentDeleteAvgTime = ((double) existent_delete_total_ns / N_NON_EXISTENT) / 1000000000.0;
+    double nonExistentDeleteAvgTime = ((double) non_existent_delete_total_ns / N_NON_EXISTENT) / 1000000000.0;
+    printf("Average existent key lookup time: %.9fs\n", existentLookupAvgTime);
+    printf("Average non-existent key lookup time: %.9fs\n", nonExistentLookupAvgTime);
+    printf("Average existent key deletion time: %.9fs\n", existentDeleteAvgTime);
+    printf("Average non-existent key deletion time: %.9fs\n", nonExistentDeleteAvgTime);
 }
 
-// debugging utility
-void print_bucket(Table * table, long idx) {
-  assert(idx >= 0 && idx <= table->nBuckets - 1);
-
-  Node * head = table->array[idx];
-  if (!head) {
-    printf("NULL\n");
-  }
-  else {
-  while (head) {
-    if (head->next != NULL) {
-        printf("(Key = %s, Value = %ld)->", head->word, head->value);
-    } else {
-        printf("(Key = %s, Value = %ld)\n", head->word, head->value);
-    }
-    head = head->next;
-  }
-  }
-}
 
 char ** load_non_existent_words() {
   char ** non_existent = malloc(sizeof(char *) * N_NON_EXISTENT);
@@ -136,7 +130,6 @@ char ** get_random_existent_words(FILE * fp) {
 }
 
 void benchmark_insert(Table * table) {
-    // 0.000000307s before optimization
     wordFp = fopen("1000w.txt", "r");
     assert(wordFp != NULL);
 
@@ -159,86 +152,23 @@ void benchmark_insert(Table * table) {
 
     assert(table->nWords == N_TRIALS);
     double insertAvgTime = ((double) insert_total_ns / N_TRIALS) / 1000000000.0;
-    printf("Average time for insertion into the hash table: %.9fs\n", insertAvgTime);
+    printf("Average insertion time: %.9fs\n", insertAvgTime);
 }
 
-void benchmark_lookup(Table * table, char ** non_existent_words) {
-  char ** random_existent_words = get_random_existent_words(wordFp);
-  int i; // loop var
+long long benchmark_lookup_and_delete(Table * table, char ** words, 
+                                      bool (*asm_func)(Table *, char *), bool existent) {
+  long long total_ns = 0;
 
-  // 500 existent words
-  long long existent_lookup_total_ns = 0;
-
-  for (i = 0; i < N_NON_EXISTENT; i++) {
+  for (int i = 0; i < N_NON_EXISTENT; i++) {
     clock_gettime(CLOCK_MONOTONIC, &start);
-    bool existentLookupCurr = ASM_lookup(table, random_existent_words[i]);
+    bool curr = (*asm_func)(table, words[i]);
     clock_gettime(CLOCK_MONOTONIC, &end);
 
-    existent_lookup_total_ns += (end.tv_sec - start.tv_sec) * 1000000000LL +
-                            (end.tv_nsec - start.tv_nsec);
+    total_ns += (end.tv_sec - start.tv_sec) * 1000000000LL +
+             (end.tv_nsec - start.tv_nsec);
 
-    assert(existentLookupCurr);
+    assert(existent ? curr : !curr);
   }
 
-  // 500 non-existent words
-  long long non_existent_lookup_total_ns = 0;
-
-  for (i = 0; i < N_NON_EXISTENT; i++) {
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    bool nonExistentLookupCurr = ASM_lookup(table, non_existent_words[i]);
-    clock_gettime(CLOCK_MONOTONIC, &end);
-
-    non_existent_lookup_total_ns += (end.tv_sec - start.tv_sec) * 1000000000LL +
-                            (end.tv_nsec - start.tv_nsec);
-
-    assert(!nonExistentLookupCurr);
-  }
-
-  double existentLookupAvgTime = ((double) existent_lookup_total_ns / N_NON_EXISTENT) / 1000000000.0;
-  printf("Average time for existent key lookup: %.9fs\n", existentLookupAvgTime);
-
-  double nonExistentLookupAvgTime = ((double) non_existent_lookup_total_ns / N_NON_EXISTENT) / 1000000000.0;
-  printf("Average time for non-existent key lookup: %.9fs\n", nonExistentLookupAvgTime);
-}
-
-void benchmark_delete(Table * table, char ** non_existent_words) { 
-  char ** random_existent_words = get_random_existent_words(wordFp);
-  int i; // loop var
-
-  // 500 existent words
-  long long existent_delete_total_ns = 0;
-
-  for (i = 0; i < N_NON_EXISTENT; i++) {
-    clock_gettime(CLOCK_MONOTONIC, &start);
-
-    // no matter what word it is, it was inserted in the table as part of the insert benchmark function
-      // so existentDeleteCurr is expected to always return true
-    bool existentDeleteCurr = ASM_delete(table, random_existent_words[i]);
-    clock_gettime(CLOCK_MONOTONIC, &end);
-
-    existent_delete_total_ns += (end.tv_sec - start.tv_sec) * 1000000000LL +
-                            (end.tv_nsec - start.tv_nsec);
-
-    assert(existentDeleteCurr);
-  }
-
-  // 500 non-existent words
-  long long non_existent_delete_total_ns = 0;
-
-  for (i = 0; i < N_NON_EXISTENT; i++) {
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    bool nonExistentDeleteCurr = ASM_delete(table, non_existent_words[i]);
-    clock_gettime(CLOCK_MONOTONIC, &end);
-
-    non_existent_delete_total_ns += (end.tv_sec - start.tv_sec) * 1000000000LL +
-                            (end.tv_nsec - start.tv_nsec);
-
-    assert(!nonExistentDeleteCurr);
-  }
-
-  double existentDeleteAvgTime = ((double) existent_delete_total_ns / N_NON_EXISTENT) / 1000000000.0;
-  printf("Average time for existent key deletion: %.9fs\n", existentDeleteAvgTime);
-
-  double nonExistentDeleteAvgTime = ((double) non_existent_delete_total_ns / N_NON_EXISTENT) / 1000000000.0;
-  printf("Average time for non-existent key delete: %.9fs\n", nonExistentDeleteAvgTime);
+  return total_ns;
 }

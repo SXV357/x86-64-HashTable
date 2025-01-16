@@ -26,6 +26,70 @@ nodeFormatOne:
 nodeFormatTwo:
     .string "Node(Key=%s, Value=%ld)\n"
 
+my_strlen:           # int my_strlen(char * s)
+    pushq %rbp
+    movq %rsp, %rbp
+
+    movq %rdi, %rsi  # char * temp = s;
+    movq $0, %rax    # int len = 0;
+
+while_my_strlen:
+    cmpb $0, (%rsi)  # while (*temp != '\0')
+    je finish_my_strlen
+
+    addq $1, %rax    # len++
+    addq $1, %rsi    # temp++
+    jmp while_my_strlen
+
+finish_my_strlen:
+    leave
+    ret
+
+my_strcmp:         # int my_strcmp(char * s1, char * s2)
+    pushq %rbp
+    movq %rsp, %rbp
+
+    movq %rdi, %rdx  # char *s1_tmp = s1;
+    movq %rsi, %rcx  # char *s2_tmp = s2;
+
+while_my_strcmp:
+    cmpb $0, (%rdx)  # while (*s1_tmp != '\0')
+    je break_while_my_strcmp
+
+    cmpb $0, (%rcx)  # (&& *s2_tmp != '\0')
+    je break_while_my_strcmp
+
+    movq (%rdx), %rax   # move *s1_tmp into rax
+    cmpb %rax, (%rcx)   # if (*s1_tmp < *s2_tmp)
+    jg my_strcmp_smaller
+
+    cmpb %rax, (%rcx)    # if (*s1_tmp > *s2_tmp)
+    jl my_strcmp_greater
+
+    addq $1, %rdx     # s1_tmp++
+    addq $1, %rcx     # s2_tmp++
+    jmp while_my_strcmp
+
+break_while_my_strcmp:
+    cmpb $0, (%rdx)    # if (*s1_tmp == '\0')
+    je my_strcmp_smaller
+    jne my_strcmp_greater
+
+    movq $0, %rax       # return 0;
+    jmp finish_my_strcmp
+
+my_strcmp_smaller:
+    movq $-1, %rax       # return -1
+    jmp finish_my_strcmp
+
+my_strcmp_greater:
+    movq $1, %rax       # return -1
+    jmp finish_my_strcmp
+
+finish_my_strcmp:
+    leave
+    ret
+
 .globl ASM_init
 ASM_init:        # Table * ASM_init(long maxWords)
     pushq %rbp
