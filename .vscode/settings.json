@@ -11,6 +11,8 @@
         "hash-table-c-chain.h": "c",
         "hash-table-c-dhash.h": "c",
         "time.h": "c",
-        "_stdio.h": "c"
+        "_stdio.h": "c",
+        "_stdlib.h": "c",
+        "_malloc.h": "c"
     }
 }

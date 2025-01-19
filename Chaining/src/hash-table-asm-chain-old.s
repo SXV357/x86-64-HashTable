@@ -1,9 +1,7 @@
 .data
-; primeNumbers:
-;     .quad 67, 131, 257, 521, 1031, 2053, 4099, 8209, 16411, 32771, 65537, 131073
-bucketSizes:
-    .quad 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072
-nBucketSizes:
+primeNumbers:
+    .quad 67, 131, 257, 521, 1031, 2053, 4099, 8209, 16411, 32771, 65537, 131073
+nPrimeNumbers:
     .quad 12
 
 .text
@@ -28,79 +26,6 @@ nodeFormatOne:
 nodeFormatTwo:
     .string "Node(Key=%s, Value=%ld)\n"
 
-my_str_len:           # int my_str_len(char * s)
-    pushq %rbp
-    movq %rsp, %rbp
-
-    movq %rdi, %rsi  # char * temp = s;
-    movq $0, %rax    # int len = 0;
-
-while_my_str_len:
-    cmpb $0, (%rsi)  # while (*temp != '\0')
-    je finish_my_str_len
-
-    incq %rax       # len++
-    incq %rsi       # temp++
-    jmp while_my_str_len
-
-finish_my_str_len:
-    leave
-    ret
-
-my_str_cmp:         # int my_str_cmp(char * s1, char * s2)
-    pushq %rbp
-    movq %rsp, %rbp
-
-    movq %rdi, %rdx  # char *s1_tmp = s1;
-    movq %rsi, %rcx  # char *s2_tmp = s2;
-
-while_my_str_cmp:
-    cmpb $0, (%rdx)  # while (*s1_tmp != '\0')
-    je break_while_my_str_cmp
-
-    cmpb $0, (%rcx)  # (&& *s2_tmp != '\0')
-    je break_while_my_str_cmp
-
-    movb (%rdx), %al   # move *s1_tmp into rax
-    cmpb %al, (%rcx)   # if (*s1_tmp < *s2_tmp)
-    jg my_str_cmp_smaller
-    jl my_str_cmp_greater
-
-    incq %rdx         # s1_tmp++
-    incq %rcx         # s2_tmp++
-    jmp while_my_str_cmp
-
-break_while_my_str_cmp:
-    cmpb $0, (%rdx)    # if (*s1_tmp == '\0')
-    je check_s2
-    jne check_s1
-
-check_s2:
-    cmpb $0, (%rcx)    # (&& *s2_tmp == '\0')
-    je my_str_cmp_equal
-    jne check_s1
-
-check_s1:
-    cmpb $0, (%rdx)    # else if (*s1_tmp == '\0')
-    je my_str_cmp_smaller
-    jne my_str_cmp_greater
-
-my_str_cmp_equal:
-    movq $0, %rax        # return 0
-    jmp finish_my_str_cmp
-
-my_str_cmp_smaller:
-    movq $-1, %rax       # return -1
-    jmp finish_my_str_cmp
-
-my_str_cmp_greater:
-    movq $1, %rax       # return -1
-    jmp finish_my_str_cmp
-
-finish_my_str_cmp:
-    leave
-    ret
-
 .globl ASM_init
 ASM_init:        # Table * ASM_init(long maxWords)
     pushq %rbp
@@ -112,14 +37,14 @@ ASM_init:        # Table * ASM_init(long maxWords)
     cmpq $0, %rdi    # if (maxWords <= 0)
     jle init_violation
 
-    movq nBucketSizes, %rax
-    subq $1, %rax             # nBuckets - 1
+    movq nPrimeNumbers, %rax
+    subq $1, %rax             # nPrimeNumbers - 1
     imulq $8, %rax
-    addq $bucketSizes, %rax   # rax has address of bucketSizes[nBucketSizes - 1]
+    addq $primeNumbers, %rax   # rax has address of primeNumbers[nPrimeNumbers - 1]
 
-    movq (%rax), %rsi     # rsi = bucketSizes[nBucketSizes - 1]
+    movq (%rax), %rsi     # rsi = primeNumbers[nPrimeNumbers - 1]
 
-    cmpq %rsi, %rdi     # if (maxWords > bucketSizes[nBucketSizes - 1])
+    cmpq %rsi, %rdi     # if (maxWords > primeNumbers[nPrimeNumbers - 1])
     jg init_violation
 
     movq %rdi, %rdx     # rdx = maxWords(temporarily store maxWords here)
@@ -127,7 +52,7 @@ ASM_init:        # Table * ASM_init(long maxWords)
     movq $32, %rdi     # sizeof(Table) = 32
     xorq %rax, %rax
 
-    pushq %rsi       # preserve maxWords and bucketSizes[nBucketSizes - 1]
+    pushq %rsi       # preserve maxWords and primeNumbers[nPrimeNumbers - 1]
     pushq %rsi
     pushq %rdx
     pushq %rdx
@@ -144,22 +69,22 @@ ASM_init:        # Table * ASM_init(long maxWords)
     cmpq $0x0, %rcx     # if (table == NULL)
     je init_table_err
 
-    movq %rsi, 16(%rcx)  # table->nBuckets = bucketSizes[nBucketSizes - 1]
+    movq %rsi, 16(%rcx)  # table->nBuckets = primeNumbers[nPrimeNumbers - 1]
     movq $0, %r8         # long i = 0;
 
 init_loop:
-   cmpq %r8, nBucketSizes   # while (i < nBucketSizes)
+   cmpq %r8, nPrimeNumbers   # while (i < nPrimeNumbers)
    jle break_init_loop
 
    movq %r8, %r9
    imulq $8, %r9
-   addq $bucketSizes, %r9   # r9 has addr of bucketSizes[i]
+   addq $primeNumbers, %r9   # r9 has addr of primeNumbers[i]
 
-   cmpq %rdx, (%r9)    # if (maxWords < bucketSizes[i])
+   cmpq %rdx, (%r9)    # if (maxWords < primeNumbers[i])
    jle continue_init_loop
 
    movq (%r9), %rax
-   movq %rax, 16(%rcx)   # table->nBuckets = bucketSizes[i]
+   movq %rax, 16(%rcx)   # table->nBuckets = primeNumbers[i]
    jmp break_init_loop
 
 continue_init_loop:
@@ -249,8 +174,8 @@ ASM_hash:        # long ASM_hash(Table * table, char * word);
     movq %rsi, %r13  # store word in r13
 
     movq %r13, %rdi
-    call my_str_len
-    cmpq $0, %rax    # if (my_str_len(word) == 0)
+    call strlen
+    cmpq $0, %rax    # if (strlen(word) == 0)
     je hash_violation
 
     movq $1, %rdx   # long hashNum = 1
@@ -261,12 +186,12 @@ ASM_hash:        # long ASM_hash(Table * table, char * word);
     pushq %rdx      # push rdx 2x to ensure 16-byte alignment
     pushq %rdx
 
-    call my_str_len
+    call strlen
 
     popq %rdx
     popq %rdx
 
-    movq %rax, %rcx   # long len = my_str_len(word);
+    movq %rax, %rcx   # long len = strlen(word);
     movq $0, %r8     # long i = 0;
 
 while_hash:
@@ -276,11 +201,9 @@ while_hash:
     movb (%r13), %r9b   # load the current character into a byte register
     movzbq %r9b, %r9    # extend to full quad word so quad operations can be used
 
-    movq %rdx, %rax   # move hashNum into rax
-    sal  $5, %rax     # hashNum = hashNum << 5
-    subq %rdx, %rax   # hashNum = (hashNum << 5) - hashNum
-
-    addq %r9, %rax    # hashNum = ((hashNum << 5) - hashNum) + word[i]
+    movq %rdx, %rax
+    imulq $31, %rax   # hashNum = 31 * hashNum
+    addq %r9, %rax    # hashNum = 31 * hashNum + word[i]
     movq %rax, %rdx   # move the result back into hashNum
 
     addq $1, %r8     # i++
@@ -288,11 +211,13 @@ while_hash:
     jmp while_hash
 
 break_while_hash:
-    movq %rdx, %rax      # move hashNum into rax
-    movq 16(%rbx), %r10  # move table->nBuckets into r10
-    subq $1, %r10        # create mask by subtracting 1 from divisor
+    movq %rdx, %rax
+    xorq %rdx, %rdx
+    movq 16(%rbx), %r10
 
-    andq %r10, %rax   # hashNum & (table->nBuckets - 1)
+    idivq %r10
+
+    movq %rdx, %rax    # we are interested in the remainder so move this
     jmp finish_hash
 
 hash_violation:
@@ -331,9 +256,9 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
 
     movq %rbx, %rdi
     xorq %rax, %rax
-    call my_str_len
+    call strlen
 
-    cmpq $0, %rax       # if (my_str_len(word) == 0)
+    cmpq $0, %rax       # if (strlen(word) == 0)
     je lookup_violation
 
     xorq %rax, %rax
@@ -362,14 +287,14 @@ while_lookup:
     pushq %r8
     pushq %r8
 
-    call my_str_cmp
+    call strcmp
 
     popq %r8
     popq %r8
 
-    movq %rax, %r9     # r9 = my_str_cmp(elem->word, word)
+    movq %rax, %r9     # r9 = strcmp(elem->word, word)
 
-    cmpq $0, %r9       # if my_str_cmp(elem->word, word) != 0
+    cmpq $0, %r9       # if strcmp(elem->word, word) != 0
     je break_while_lookup
 
     movq 16(%r8), %r8   # elem = elem->next;
@@ -410,17 +335,17 @@ ASM_get:         # long ASM_get(Table * table, char * word)
     je get_violation
 
     movq %rdi, %rbx   # store table in rbx
-    movq %rsi, %rdi   # move word into rdi for my_str_len call
+    movq %rsi, %rdi   # move word into rdi for strlen call
 
     pushq %rsi
     pushq %rsi
 
-    call my_str_len
+    call strlen
 
     popq %rsi
     popq %rsi
 
-    cmpq $0, %rax     # if (my_str_len(word) == 0)
+    cmpq $0, %rax     # if (strlen(word) == 0)
     je get_violation
 
     movq %rbx, %rdi   # move table into rdi for ASM_hash call
@@ -454,14 +379,14 @@ while_get:
     pushq %rdx
     pushq %rdx
 
-    call my_str_cmp
+    call strcmp
 
     popq %rdx
     popq %rdx
     popq %rsi
     popq %rsi
 
-    cmpq $0, %rax   # if (my_str_cmp(head->word, word) == 0)
+    cmpq $0, %rax   # if (strcmp(head->word, word) == 0)
     je found_key
 
     movq 16(%rdx), %rdx  # head = head->next
@@ -498,17 +423,17 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     je insert_violation
 
     movq %rdi, %r12    # temporarily store table in r12
-    movq %rsi, %rdi    # move word into rdi for my_str_len call
+    movq %rsi, %rdi    # move word into rdi for strlen call
 
     pushq %rsi
     pushq %rdx
 
-    call my_str_len
+    call strlen
 
     popq %rdx
     popq %rsi
 
-    cmpq $0, %rax    # if (my_str_len(word)) == 0
+    cmpq $0, %rax    # if (strlen(word)) == 0
     je insert_violation
 
     cmpq $0, %rdx    # if (value < 0)
@@ -570,18 +495,18 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     pushq %rdx
     pushq %rdx
 
-    call my_str_len      # my_str_len(word)
+    call strlen      # strlen(word)
 
     popq %rdx
     popq %rdx
     popq %rcx
     popq %rcx
 
-    movq %rax, %r8   # r8 = my_str_len(word)
+    movq %rax, %r8   # r8 = strlen(word)
 
     movq %r8, %rax
     addq $1, %rax
-    movq %rax, %rdi  # rdi = my_str_len(word) + 1
+    movq %rax, %rdi  # rdi = strlen(word) + 1
 
     # need to preserve word length, node to insert and targetIdx
 
@@ -601,14 +526,14 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     popq %r8
     popq %r8
 
-    movq %rax, (%rdx)  # new->word = malloc(my_str_len(word) + 1)
+    movq %rax, (%rdx)  # new->word = malloc(strlen(word) + 1)
     cmpq $0x0, (%rdx)  # if (new->word == NULL)
     je insert_err_word
 
     movq (%rdx), %rdi  # (%rdx) = new->word
     movq %r10, %rsi    # r10 = char * word
 
-    # my_str_len(word) will be used in next statement so needs to be preserved
+    # strlen(word) will be used in next statement so needs to be preserved
     # so will targetIdx and node in subsequent statements
 
     pushq %r8
@@ -627,9 +552,9 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     popq %r8
     popq %r8
 
-    addq (%rdx), %r8  # r8 now stores addr of new->word[my_str_len(word)]
+    addq (%rdx), %r8  # r8 now stores addr of new->word[strlen(word)]
     movb (%r8), %al
-    movb $0, %al   # new->word[my_str_len(word)] = '\0';
+    movb $0, %al   # new->word[strlen(word)] = '\0';
 
     movq %r13, 8(%rdx)  # new->value = value;
     movq $0x0, 16(%rdx) # new->next = NULL;
@@ -662,14 +587,14 @@ insert_while:
    pushq %rdx
    pushq %rdx
 
-   call my_str_cmp
+   call strcmp
 
    popq %rdx
    popq %rdx
    popq %rcx
    popq %rcx
 
-   cmpq $0, %rax     # if (my_str_cmp(head->word, word) == 0)
+   cmpq $0, %rax     # if (strcmp(head->word, word) == 0)
    je insert_match_found
 
    cmpq $0x0, 16(%rcx)  # else if (head->next == NULL)
@@ -753,17 +678,17 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
     je delete_violation
 
     movq %rdi, %r9    # temporarily store table in r9
-    movq %rsi, %rdi   # move word into rdi for my_str_len call
+    movq %rsi, %rdi   # move word into rdi for strlen call
 
     pushq %r9
     pushq %rsi
 
-    call my_str_len
+    call strlen
 
     popq %rsi
     popq %r9
 
-    cmpq $0, %rax    # if my_str_len(word) == 0
+    cmpq $0, %rax    # if strlen(word) == 0
     je delete_violation
 
     movq %r9, %rdi   # move table back into rdi
@@ -807,14 +732,14 @@ while_delete:
     pushq %r8
 
     xorq %rax, %rax
-    call my_str_cmp
+    call strcmp
 
     popq %r8
     popq %rcx
     popq %rdx
     popq %rdx
 
-    cmpq $0, %rax    # if (my_str_cmp(head->word, word) == 0)
+    cmpq $0, %rax    # if (strcmp(head->word, word) == 0)
     je delete_match_found
 
     movq %rdx, %rcx   # prev = head
@@ -893,21 +818,21 @@ ASM_update:       # bool ASM_update(Table * table, char * word, long value);
     je update_violation
 
     movq %rdi, %r10  # temporarily store table in r10
-    movq %rsi, %rdi  # move word into rdi for my_str_len call
+    movq %rsi, %rdi  # move word into rdi for strlen call
 
     pushq %r10
     pushq %rsi
     pushq %rdx
     pushq %rdx
 
-    call my_str_len
+    call strlen
 
     popq %rdx
     popq %rdx
     popq %rsi
     popq %r10
 
-    cmpq $0, %rax    # if (my_str_len(word) == 0)
+    cmpq $0, %rax    # if (strlen(word) == 0)
     je update_violation
 
     cmpq $0, %rdx     # if (value < 0)
@@ -949,12 +874,12 @@ while_update:
     pushq %r8
 
     xorq %rax, %rax
-    call my_str_cmp
+    call strcmp
 
     popq %r8
     popq %rcx
 
-    cmpq $0, %rax     # if my_str_cmp(elem->word, word) == 0
+    cmpq $0, %rax     # if strcmp(elem->word, word) == 0
     je update_match_found
 
     cmpq $0x0, 16(%r8)   # else if (elem->next == NULL)
@@ -1217,3 +1142,4 @@ finish_clear:
 
     leave
     ret
+    
