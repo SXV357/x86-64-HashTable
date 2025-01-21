@@ -3,6 +3,8 @@ bucketSizes:
     .quad 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072
 nBucketSizes:
     .quad 12
+maxKeySize:
+    .quad 32
 
 .text
 initTableErr:
@@ -25,6 +27,51 @@ nodeFormatOne:
 
 nodeFormatTwo:
     .string "Node(Key=%s, Value=%ld)\n"
+
+my_str_cpy:         # void my_str_cpy(char * dest, char * src)
+    pushq %rbp
+    movq %rsp, %rbp
+
+    movq $0, %rdx    # long i = 0;
+
+while_my_str_cpy:
+    movq %rdx, %rcx
+    addq %rsi, %rcx
+    
+    cmpb $0, (%rcx)   # while (src[i] != '\0')
+    je break_while_my_str_cpy
+
+    cmpq %rdx, maxKeySize  # && (i < MAX_KEY_SIZE)
+    jle break_while_my_str_cpy
+
+    movq %rdx, %r8
+    addq %rdi, %r8
+
+    movb (%r8), %al
+    movb (%rcx), %al     # dest[i] = src[i]
+    incq %rdx            # i++
+    jmp while_my_str_cpy
+
+break_while_my_str_cpy:
+    movq %rdx, %rcx
+    addq %rdi, %rcx
+    movb $0, (%rcx)     # dest[i] = '\0'
+
+fill_zeros:
+    cmpq %rdx, maxKeySize  # while (i < MAX_KEY_SIZE)
+    jle finish_my_str_cpy
+
+    movq %rdx, %rcx
+    addq %rdi, %rcx
+
+    movb $0, (%rcx)     # dest[i] = '\0
+    incq %rdx           # i++
+
+    jmp fill_zeros
+
+finish_my_str_cpy:
+    leave
+    ret
 
 my_str_len:           # int my_str_len(char * s)
     pushq %rbp
@@ -591,7 +638,7 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     pushq %rdx
     pushq %rdx
 
-    call strcpy      # strcpy(new->word, word);
+    call my_str_cpy      # my_str_cpy(new->word, word);
 
     popq %rdx
     popq %rdx
