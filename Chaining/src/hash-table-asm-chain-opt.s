@@ -38,14 +38,17 @@ while_my_str_cpy:
     movq %rdx, %rcx
     addq %rsi, %rcx
     
-    cmpb $0, (%rcx)   # while (src[i] != '\0')
+    movb (%rcx), %al
+    testb %al, %al              # while (src[i] != '\0')
     je break_while_my_str_cpy
 
     cmpq %rdx, maxKeySize  # && (i < MAX_KEY_SIZE)
     jle break_while_my_str_cpy
 
-    movq %rdx, %r8
-    addq %rdi, %r8
+    movq (%rdi, %rdx, 1), %r8
+
+    ; movq %rdx, %r8
+    ; addq %rdi, %r8
 
     movb (%r8), %al
     movb (%rcx), %al     # dest[i] = src[i]
@@ -53,16 +56,19 @@ while_my_str_cpy:
     jmp while_my_str_cpy
 
 break_while_my_str_cpy:
-    movq %rdx, %rcx
-    addq %rdi, %rcx
+    movq (%rdi, %rdx, 1), %rcx
+    ; movq %rdx, %rcx
+    ; addq %rdi, %rcx
     movb $0, (%rcx)     # dest[i] = '\0'
 
 fill_zeros:
     cmpq %rdx, maxKeySize  # while (i < MAX_KEY_SIZE)
     jle finish_my_str_cpy
 
-    movq %rdx, %rcx
-    addq %rdi, %rcx
+    movq (%rdi, %rdx, 1), %rcx
+
+    ; movq %rdx, %rcx
+    ; addq %rdi, %rcx
 
     movb $0, (%rcx)     # dest[i] = '\0
     incq %rdx           # i++
@@ -81,7 +87,8 @@ my_str_len:           # int my_str_len(char * s)
     movq $0, %rax    # int len = 0;
 
 while_my_str_len:
-    cmpb $0, (%rsi)  # while (*temp != '\0')
+    movb (%rsi), %al
+    testb %al, %al   # while (*temp != '\0')
     je finish_my_str_len
 
     incq %rax       # len++
@@ -148,13 +155,13 @@ my_str_dup:        # char * my_str_dup(char * s)
 
     movq %rdi, %rbx    # temporarily store s in rbx
 
-    movq $32, %rdi     # 32 bytes to allocate
+    movq maxKeySize, %rdi     # 32 bytes to allocate
     movq $1, %rsi      # sizeof(char)
 
     call calloc
 
     movq %rax, %rdx    # char * res = calloc(32, sizeof(char))
-    cmpq $0x0, %rdx    # if (!res)
+    testq %rdx, %rdx    # if (!res)
     je my_str_dup_violation
 
     pushq %rdx
@@ -315,8 +322,6 @@ ASM_hash:        # long ASM_hash(Table * table, char * word);
 
     pushq %rbx      # push all callee-saved registers in pairs to ensure 16-byte alignment
     pushq %rbx
-    pushq %r10
-    pushq %r10
     pushq %r13
     pushq %r13
 
@@ -383,8 +388,6 @@ hash_violation:
 finish_hash:
     popq %r13
     popq %r13
-    popq %r10
-    popq %r10
     popq %rbx
     popq %rbx
 
@@ -401,10 +404,10 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     pushq %r12
     pushq %r12
 
-    cmpq $0x0, %rdi    # if (table == NULL)
+    testq %rdi, %rdi   # if (table == NULL)
     je lookup_violation
 
-    cmpq $0x0, %rsi   # if (word == NULL)
+    testq %rsi, %rsi   # if (word == NULL)
     je lookup_violation
 
     movq %rsi, %rbx    # rbx = char * word
@@ -414,7 +417,7 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     xorq %rax, %rax
     call my_str_len
 
-    cmpq $0, %rax       # if (my_str_len(word) == 0)
+    testq %rax, %rax       # if (my_str_len(word) == 0)
     je lookup_violation
 
     xorq %rax, %rax
@@ -426,13 +429,16 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
 
     movq %rax, %rdx    # long hashNum = hash(table, word)
 
-    movq %rdx, %r8
-    imulq $8, %r8      # offset of 24
-    addq 24(%r12), %r8
-    movq (%r8), %r8    # Node * elem = table->array[hashNum]
+    movq 24(%r12, %rdx, 8), %r8
+    movq (%r8), %r8     # Node * elem = table->array[hashNum]
+
+    ; movq %rdx, %r8
+    ; imulq $8, %r8      # offset of 24
+    ; addq 24(%r12), %r8
+    ; movq (%r8), %r8
 
 while_lookup:
-    cmpq $0x0, %r8     # if (elem != NULL)
+    testq %r8, %r8     # while (elem != NULL)
     je break_while_lookup
 
     movq (%r8), %rdi   # (%r8) contains pointer to elem->word
@@ -450,14 +456,14 @@ while_lookup:
 
     movq %rax, %r9     # r9 = my_str_cmp(elem->word, word)
 
-    cmpq $0, %r9       # if my_str_cmp(elem->word, word) != 0
+    testq %r9, %r9       # if my_str_cmp(elem->word, word) != 0
     je break_while_lookup
 
     movq 16(%r8), %r8   # elem = elem->next;
     jmp while_lookup
 
 break_while_lookup:
-    cmpq $0x0, %r8     # if (elem == NULL)
+    testq %r8, %r8     # if (elem == NULL)
     je lookup_violation
 
     movq $1, %rax     # return 1(true)
@@ -572,10 +578,10 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     pushq %r13
     pushq %r13
 
-    cmpq $0x0, %rdi    # if (table == NULL)
+    testq %rsi, %rdi   # if (table == NULL)
     je insert_violation
 
-    cmpq $0x0, %rsi    # if (word == NULL)
+    testq %rsi, %rsi   # if (word == NULL)
     je insert_violation
 
     movq %rdi, %r12    # temporarily store table in r12
@@ -589,10 +595,10 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     popq %rdx
     popq %rsi
 
-    cmpq $0, %rax    # if (my_str_len(word)) == 0
+    testq %rax, %rax    # if (my_str_len(word)) == 0
     je insert_violation
 
-    cmpq $0, %rdx    # if (value < 0)
+    testq %rdx, %rdx    # if (value < 0)
     jl insert_violation
 
     movq %r12, %rdi    # move table back into rdi for use again
@@ -637,7 +643,7 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     # i.e. long value has been moved to r13
 
     movq %rax, %rdx   # Node *new = (Node *) malloc(sizeof(Node))
-    cmpq $0x0, %rdx   # if (new == NULL)
+    testq %rdx, %rdx   # if (new == NULL)
     je insert_err_node
 
     movq $32, %rdi  # 32 bytes
@@ -658,7 +664,9 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     popq %rcx
 
     movq %rax, (%rdx)  # new->word = calloc(32, sizeof(char))
-    cmpq $0x0, (%rdx)  # if (new->word == NULL)
+    movq (%rdx), %rax
+
+    testq %rax, %rax  # if (new->word == NULL)
     je insert_err_word
 
     movq (%rdx), %rdi  # (%rdx) = new->word
@@ -682,9 +690,11 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     movq %r13, 8(%rdx)  # new->value = value;
     movq $0x0, 16(%rdx) # new->next = NULL;
 
-    movq %rcx, %rax    # move targetIdx to rax
-    imulq $8, %rax     # targetIdx *= 8(each el in the array is a Node *)
-    addq 24(%rbx), %rax
+    movq 24(%rbx, %rcx, 8), %rax
+
+    ; movq %rcx, %rax
+    ; imulq $8, %rax
+    ; addq 24(%rbx), %rax
 
     # overwriting rcx is fine here since we won't need it anymore
     # 24(%rbx) is essentially ** array so at the end of last statement,
@@ -693,11 +703,11 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
 
     movq (%rax), %rcx    # Node * head = table->array[targetIdx]
 
-    cmpq $0x0, %rcx    # if (head == NULL)
+    testq %rcx, %rcx    # if (head == NULL)
     je insert_list_empty
 
 insert_while:
-   cmpq $0x0, %rcx     # while (head != NULL)
+   testq %rcx, %rcx    # while (head != NULL)
    je break_insert_while
 
    movq (%rcx), %rdi  # (%rcx) = temp->word
@@ -717,10 +727,11 @@ insert_while:
    popq %rcx
    popq %rcx
 
-   cmpq $0, %rax     # if (my_str_cmp(head->word, word) == 0)
+   testq %rax, %rax     # if (my_str_cmp(head->word, word) == 0)
    je insert_match_found
 
-   cmpq $0x0, 16(%rcx)  # else if (head->next == NULL)
+   movq 16(%rcx), %rax
+   testq %rax, %rax  # else if (head->next == NULL)
    je break_insert_while
 
    jmp continue_insert_while # if both the if and else if statements fail then continue
@@ -763,7 +774,7 @@ insert_violation:
     jmp finish_insert
 
 insert_done:
-   addq $1, 8(%rbx)   # table->nWords++;
+   incq 8(%rbx)   # table->nWords++;
    movq $1, %rax     # return 1(true)
    jmp finish_insert
 
@@ -794,10 +805,10 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
     pushq %r13
     pushq %r14
 
-    cmpq $0x0, %rdi     # if (table == NULL)
+    testq %rdi, %rdi    # if (table == NULL)
     je delete_violation
 
-    cmpq $0x0, %rsi    # if (word == NULL)
+    testq %rsi, %rsi    # if (word == NULL)
     je delete_violation
 
     movq %rdi, %r9    # temporarily store table in r9
@@ -811,7 +822,7 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
     popq %rsi
     popq %r9
 
-    cmpq $0, %rax    # if my_str_len(word) == 0
+    testq %rax, %rax   # if my_str_len(word) == 0
     je delete_violation
 
     movq %r9, %rdi   # move table back into rdi
@@ -830,8 +841,11 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
     popq %rdi
 
     movq %rax, %rdx   # long targetIdx = ASM_hash(table, word)
-    imulq $8, %rdx
-    addq 24(%rdi), %rdx
+
+    movq 24(%rdi, %rdx, 8), %rdx
+
+    ; imulq $8, %rdx
+    ; addq 24(%rdi), %rdx
 
     movq %rdx, %r14    # saving this here for the case when match is found and prev = NULL
 
@@ -843,7 +857,7 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
     movq %rsi, %r12   # r12 = word
 
 while_delete:
-    cmpq $0x0, %rdx   # while (head != NULL)
+    testq %rdx, %rdx  # while (head != NULL)
     je break_while_delete
 
     movq (%rdx), %rdi   # (%rdx) contains pointer to head->word
@@ -862,7 +876,7 @@ while_delete:
     popq %rdx
     popq %rdx
 
-    cmpq $0, %rax    # if (my_str_cmp(head->word, word) == 0)
+    testq %rax, %rax   # if (my_str_cmp(head->word, word) == 0)
     je delete_match_found
 
     movq %rdx, %rcx   # prev = head
@@ -873,7 +887,7 @@ delete_match_found:
    movq $1, %r8     # found = true
    movq %rdx, %r13  # Node * temp = head
 
-   cmpq $0x0, %rcx   # if (prev == NULL)
+   testq %rcx, %rcx   # if (prev == NULL)
    je delete_prev_null
 
    movq 16(%rdx), %rax
@@ -902,10 +916,10 @@ delete_temp:
   jmp break_while_delete
 
 break_while_delete:
-   cmpq $0, %r8      # if (!found)
+   testq %r8, %r8      # if (!found)
    je delete_violation
 
-   subq $1, 8(%rbx)   # table->nWords--;
+   decq 8(%rbx)   # table->nWords--;
    movq $1, %rax      # return 1(true)
    jmp finish_delete
 
