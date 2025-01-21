@@ -96,12 +96,9 @@ my_str_cmp:         # int my_str_cmp(char * s1, char * s2)
     pushq %rbp
     movq %rsp, %rbp
 
-    pushq %rbx
-    pushq %rbx
-
     movq %rdi, %rdx   # move s1 into rdx
     movq %rsi, %rcx   # move s2 into rcx
-    movq $1, %r10     # long i = 0;
+    movq $1, %r10     # long i = 1;
 
 while_my_str_cmp:
     movq (%rdi), %r8   # loading 8 bytes of s1 into r8
@@ -113,10 +110,7 @@ while_my_str_cmp:
     BSWAP %r8       # by default in little endian so swap to get in big endian notation
     BSWAP %r9
 
-    movq %r9, %rbx
-    subq %r8, %rbx
-
-    cmpq $0, %rbx      # compare diff of (s2 - s1)
+    cmpq %r8, %r9          # compare difference of (s2 - s1)
     jg my_str_cmp_smaller
     jl my_str_cmp_greater
 
@@ -142,6 +136,46 @@ my_str_cmp_greater:
     jmp finish_my_str_cmp
 
 finish_my_str_cmp:
+    leave
+    ret
+
+my_str_dup:        # char * my_str_dup(char * s)
+    pushq %rbp
+    movq %rsp, %rbp
+
+    pushq %rbx
+    pushq %rbx
+
+    movq %rdi, %rbx    # temporarily store s in rbx
+
+    movq $32, %rdi     # 32 bytes to allocate
+    movq $1, %rsi      # sizeof(char)
+
+    call calloc
+
+    movq %rax, %rdx    # char * res = calloc(32, sizeof(char))
+    cmpq $0x0, %rdx    # if (!res)
+    je my_str_dup_violation
+
+    pushq %rdx
+    pushq %rdx
+
+    movq %rdx, %rdi    # move res into rdi
+    movq %rbx, %rsi    # move s into rsi
+
+    call my_str_cpy
+
+    popq %rdx
+    popq %rdx
+
+    movq %rdx, %rax       # return res
+    jmp my_str_dup_finish
+
+my_str_dup_violation:
+    movq $0x0, %rax
+    jmp my_str_dup_finish
+
+my_str_dup_finish:
     popq %rbx
     popq %rbx
 
@@ -1011,14 +1045,14 @@ break_while_update:
     pushq %r9
 
     xorq %rax, %rax
-    call strdup
+    call my_str_dup
 
     popq %r9
     popq %r9
     popq %r8
     popq %rcx
 
-    movq %rax, (%r9)   # e->word = strdup(word)
+    movq %rax, (%r9)   # e->word = my_str_dup(word)
     movq %r13, 8(%r9)  # e->value = value;
     movq $0x0, 16(%r9)  # e->next = NULL;
 
