@@ -166,7 +166,7 @@ bool lookup(Table * table, char * word) {
     long hashNum = hash(table, word);
 
     Node * prev = NULL; // track prev pointer
-    Node * tmp_head = table->array[hashNum]; // maintain this for head insertion later
+    Node ** head = &(table->array[hashNum]); // maintain this for head insertion later
     Node * elem = table->array[hashNum];
 
     while ((elem != NULL) && (!my_str_cmp_opt(elem->word, word))) {
@@ -188,8 +188,8 @@ bool lookup(Table * table, char * word) {
 
         // re-insert at head
             // we want to make sure this node already isn't at the head of the list
-        elem->next = tmp_head;
-        table->array[hashNum] = elem;
+        elem->next = *head;
+        *head = elem;
     }
 
     return true;

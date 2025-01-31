@@ -435,10 +435,7 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     movq (%r8), %r8     # Node * elem = table->array[hashNum]
 
     movq $0x0, %r10    # Node * prev = NULL
-    movq 24(%r12, %rdx, 8), %r11
-    movq %r11, %r13     # store address of table->array[hashNum] in r13
-
-    movq (%r11), %r11   # Node * tmp_head = table->array[hashNum]
+    movq 24(%r12, %rdx, 8), %r11  # Node ** head = &(table->array[hashNum])
 
     ; movq %rdx, %r8
     ; imulq $8, %r8      # offset of 24
@@ -485,8 +482,9 @@ break_while_lookup:
     movq 16(%r8), %rax  # move elem->next into rax
     movq %rax, 16(%r10)  # prev->next = elem->next
 
-    movq %r11, 16(%r8)  # elem->next = tmp_head
-    movq %r8, (%r13)    # table->array[hashNum] = elem
+    movq (%r11), %rax
+    movq %rax, 16(%r8)  # elem->next = *head
+    movq %r8, %rax      # *head = elem
     jmp lookup_success
 
 lookup_success:
