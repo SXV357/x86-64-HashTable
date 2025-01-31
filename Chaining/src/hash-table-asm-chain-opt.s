@@ -403,6 +403,8 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     pushq %rbx
     pushq %r12
     pushq %r12
+    pushq %r13
+    pushq %r13
 
     testq %rdi, %rdi   # if (table == NULL)
     je lookup_violation
@@ -432,6 +434,12 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     movq 24(%r12, %rdx, 8), %r8
     movq (%r8), %r8     # Node * elem = table->array[hashNum]
 
+    movq $0x0, %r10    # Node * prev = NULL
+    movq 24(%r12, %rdx, 8), %r11
+    movq %r11, %r13     # store address of table->array[hashNum] in r13
+
+    movq (%r11), %r11   # Node * tmp_head = table->array[hashNum]
+
     ; movq %rdx, %r8
     ; imulq $8, %r8      # offset of 24
     ; addq 24(%r12), %r8
@@ -448,9 +456,13 @@ while_lookup:
 
     pushq %r8
     pushq %r8
+    pushq $r10
+    pushq %r11
 
     call my_str_cmp
 
+    popq %r11
+    popq %r10
     popq %r8
     popq %r8
 
@@ -459,6 +471,7 @@ while_lookup:
     testq %r9, %r9       # if my_str_cmp(elem->word, word) != 0
     je break_while_lookup
 
+    movq %r8, %r10      # prev = elem
     movq 16(%r8), %r8   # elem = elem->next;
     jmp while_lookup
 
@@ -466,7 +479,18 @@ break_while_lookup:
     testq %r8, %r8     # if (elem == NULL)
     je lookup_violation
 
-    movq $1, %rax     # return 1(true)
+    testq %r10, %r10    # if (prev != NULL)
+    je lookup_success
+
+    movq 16(%r8), %rax  # move elem->next into rax
+    movq %rax, 16(%r10)  # prev->next = elem->next
+
+    movq %r11, 16(%r8)  # elem->next = tmp_head
+    movq %r8, (%r13)    # table->array[hashNum] = elem
+    jmp lookup_success
+
+lookup_success:
+    movq $1, %rax
     jmp finish_lookup
 
 lookup_violation:

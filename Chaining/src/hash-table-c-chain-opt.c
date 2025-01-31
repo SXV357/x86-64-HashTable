@@ -164,13 +164,35 @@ bool lookup(Table * table, char * word) {
     }
 
     long hashNum = hash(table, word);
+
+    Node * prev = NULL; // track prev pointer
+    Node * tmp_head = table->array[hashNum]; // maintain this for head insertion later
     Node * elem = table->array[hashNum];
 
-    while ((elem != NULL) && (!my_str_cmp_opt(elem->word,word))) {
+    while ((elem != NULL) && (!my_str_cmp_opt(elem->word, word))) {
+      prev = elem;
       elem = elem->next;
     }
 
-    return elem == NULL ? false : true;
+    if (elem == NULL) {
+        // the element wasn't found so return false
+        return false;
+    }
+
+    // if prev = NULL, it means the node was already at the head of the list so no need to delete and re-insert
+    if (prev != NULL) {
+        // means the node found was in the middle or end of the list so need to delete and re-insert at head
+
+        // deleting elem
+        prev->next = elem->next;
+
+        // re-insert at head
+            // we want to make sure this node already isn't at the head of the list
+        elem->next = tmp_head;
+        table->array[hashNum] = elem;
+    }
+
+    return true;
 }
 
 long get(Table * table, char * word) {
