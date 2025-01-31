@@ -498,6 +498,8 @@ lookup_violation:
     jmp finish_lookup
 
 finish_lookup:
+    popq %r13
+    popq %r13
     popq %r12
     popq %r12
     popq %rbx
