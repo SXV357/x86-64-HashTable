@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -g -Wall
+ASM_FLAGS = $(CFLAGS) -static # specifically for compiling ASM files
 
 # Executables
 all: c-old-test asm-old-test c-opt-test asm-opt-test
@@ -10,7 +11,7 @@ c-old-test: src/hash-table-c-chain-old.c tests/hash-table-c-chain-test.c
 
 # x86 implementation(old)
 asm-old-test: src/hash-table-asm-chain-old.s src/hash-table-c-chain-old.c tests/hash-table-asm-chain-test.c
-	$(CC) $(CFLAGS) src/hash-table-asm-chain-old.s src/hash-table-c-chain-old.c tests/hash-table-asm-chain-test.c -o asm-old-test
+	$(CC) $(ASM_FLAGS) src/hash-table-asm-chain-old.s src/hash-table-c-chain-old.c tests/hash-table-asm-chain-test.c -o asm-old-test
 
 # C implementation(new)
 c-opt-test: src/hash-table-c-chain-opt.c tests/hash-table-c-chain-test.c
@@ -18,7 +19,7 @@ c-opt-test: src/hash-table-c-chain-opt.c tests/hash-table-c-chain-test.c
 
 # x86 implementation(new)
 asm-opt-test: src/hash-table-asm-chain-opt.s src/hash-table-c-chain-opt.c tests/hash-table-asm-chain-test.c
-	$(CC) $(CFLAGS) src/hash-table-asm-chain-opt.s src/hash-table-c-chain-opt.c tests/hash-table-asm-chain-test.c -o asm-opt-test
+	$(CC) $(ASM_FLAGS) src/hash-table-asm-chain-opt.s src/hash-table-c-chain-opt.c tests/hash-table-asm-chain-test.c -o asm-opt-test
 
 clean:
 	rm -f c-old-test asm-old-test c-opt-test asm-opt-test
