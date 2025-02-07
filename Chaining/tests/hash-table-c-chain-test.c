@@ -6,6 +6,8 @@
 #include <string.h>
 #include "src/hash-table-c-chain.h"
 
+// For testing both the C implementations(old + new)
+
 void test_init();
 void test_hash(Table * table);
 

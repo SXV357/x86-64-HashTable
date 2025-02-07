@@ -5,6 +5,8 @@
 #include <string.h>
 #include "src/hash-table-c-chain.h"
 
+// For testing both the x86-64 implementations(old + new)
+
 // functions defined in the assembly implementation
 extern Table * ASM_init(long maxWords);
 extern long ASM_hash(Table * table, char * word);
