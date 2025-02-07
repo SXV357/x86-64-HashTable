@@ -35,8 +35,10 @@ my_str_cpy:         # void my_str_cpy(char * dest, char * src)
     movq $0, %rdx    # long i = 0;
 
 while_my_str_cpy:
-    movq %rdx, %rcx
-    addq %rsi, %rcx
+    movq (%rsi, %rdx, 1), %rcx
+
+    ; movq %rdx, %rcx
+    ; addq %rsi, %rcx
     
     movb (%rcx), %al
     testb %al, %al              # while (src[i] != '\0')
@@ -57,8 +59,10 @@ while_my_str_cpy:
 
 break_while_my_str_cpy:
     movq (%rdi, %rdx, 1), %rcx
+
     ; movq %rdx, %rcx
     ; addq %rdi, %rcx
+    
     movb $0, (%rcx)     # dest[i] = '\0'
 
 fill_zeros:
