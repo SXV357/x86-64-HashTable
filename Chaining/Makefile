@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall - Werror
+CFLAGS = -g -Wall
 
 # Executables
 all: c-old-test asm-old-test c-opt-test asm-opt-test

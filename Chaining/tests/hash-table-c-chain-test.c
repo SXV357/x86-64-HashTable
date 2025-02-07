@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "src/hash-table-c-chain.h"
+#include "../src/hash-table-c-chain.h"
 
 // For testing both the C implementations(old + new)
 
