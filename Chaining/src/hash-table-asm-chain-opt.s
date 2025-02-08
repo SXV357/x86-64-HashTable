@@ -457,7 +457,7 @@ while_lookup:
 
     pushq %r8
     pushq %r8
-    pushq $r10
+    pushq %r10
     pushq %r11
 
     call my_str_cmp
