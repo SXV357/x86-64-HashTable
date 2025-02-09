@@ -3,9 +3,9 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../src/hash-table-c-chain.h"
+#include "../../src/hash-table-chain.h"
 
-// For testing the new x86 implementation
+// For testing the old x86 implementation
 
 // functions defined in the assembly implementation
 extern Table * ASM_init(long maxWords);
@@ -37,9 +37,8 @@ int main(int argc, char **argv) {
    test_init();
    printf("Table init tests passed...\n\n");
 
-   // 256 buckets and 255 maxWords
    printf("Running actual table initialization test...\n");
-   long maxWords = 255; // UPDATE 1
+   long maxWords = 256;
    Table * table = ASM_init(maxWords);
    assert(table);
    assert(table->maxWords == maxWords);
@@ -86,7 +85,7 @@ void test_init() {
    Table * tableOne = ASM_init(maxWordsValidOne);
    assert(tableOne);
    assert(tableOne->maxWords == maxWordsValidOne);
-   assert(tableOne->nBuckets == 64); // UPDATE 2
+   assert(tableOne->nBuckets == 67);
    assert(tableOne->array);
    for (int i = 0; i < tableOne->nBuckets; i++) {
      assert(tableOne->array[i] == NULL);
@@ -96,7 +95,7 @@ void test_init() {
    Table * tableTwo = ASM_init(maxWordsValidTwo);
    assert(tableTwo);
    assert(tableTwo->maxWords == 113);
-   assert(tableTwo->nBuckets == 128); // UPDATE 3
+   assert(tableTwo->nBuckets == 131);
    assert(tableTwo->array);
    for (int j = 0; j < tableTwo->nBuckets; j++) {
       assert(tableTwo->array[j] == NULL);
@@ -198,8 +197,6 @@ void test_lookup(Table * table) {
    bool lookupFive = ASM_lookup(NULL, NULL);
    bool lookupSix = ASM_lookup(NULL, "");
    bool lookupSeven = ASM_lookup(table, "");
-
-   // TO DO: test where after a successful lookup, the node is moved to front of chain
 
    assert((!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
 }

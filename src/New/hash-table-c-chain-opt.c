@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
-#include "hash-table-c-chain.h"
+#include "../hash-table-chain.h"
 
 #define MAX_KEY_SIZE (32) // each key(char *) will be 32 bytes long
 

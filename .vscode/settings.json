@@ -13,6 +13,7 @@
         "time.h": "c",
         "_stdio.h": "c",
         "_stdlib.h": "c",
-        "_malloc.h": "c"
+        "_malloc.h": "c",
+        "hash-table-chain.h": "c"
     }
 }

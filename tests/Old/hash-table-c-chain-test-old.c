@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "../src/hash-table-c-chain.h"
+#include "../../src/hash-table-chain.h"
 
-// For testing the new C implementation
+// For testing the old C implementation
 
 void test_init();
 void test_hash(Table * table);
@@ -24,9 +24,9 @@ int main(int argc, char **argv) {
     test_init();
     printf("Table initialization tests passed...\n\n");
 
-    // initialize number of buckets to 256 with 255 maxWords
+    // will initialize maxWords to 256 and number of buckets to 257
     printf("Running actual table initialization test...\n");
-    long maxWords = 255; // UPDATE 1
+    long maxWords = 256;
     Table * table = init(maxWords);
     assert(table);
     assert(table->maxWords == maxWords);
@@ -75,7 +75,7 @@ void test_hash(Table * table) {
 
     // general cases
     char *words[] = {"hello", "bye", "see", "flag"};
-    long indices[4] = {113, 77, 178, 237}; // UPDATE 2
+    long indices[4] = {22, 92, 132, 20};
 
     for (int i = 0; i < 4; i++) {
         assert(hash(table, words[i]) == indices[i]);
@@ -87,14 +87,14 @@ void test_init() {
     Table * tableOne = init(maxWordsValidOne);
     assert(tableOne);
     assert(tableOne->maxWords == maxWordsValidOne);
-    assert(tableOne->nBuckets == 64); // UPDATE 3
+    assert(tableOne->nBuckets == 67);
     assert(tableOne->array);
 
     long maxWordsValidTwo = 113.5;
     Table * tableTwo = init(maxWordsValidTwo);
     assert(tableTwo);
     assert(tableTwo->maxWords == 113);
-    assert(tableTwo->nBuckets == 128); // UPDATE 4
+    assert(tableTwo->nBuckets == 131);
     assert(tableTwo->array);
 
     long maxWordsInvalid[3] = {-3, 200000, 0};
@@ -176,8 +176,6 @@ void test_lookup(Table * table) {
     bool lookupFive = lookup(NULL, "banana");
     bool lookupSix = lookup(NULL, "diablo");
     bool lookupSeven = lookup(NULL, NULL);
-
-    // TO DO: tests for checking if after a successful lookup, that element is moved to front of chain
 
     assert((!lookupThree) && (!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
 }
