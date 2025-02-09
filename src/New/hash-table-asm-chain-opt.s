@@ -35,46 +35,26 @@ my_str_cpy:         # void my_str_cpy(char * dest, char * src)
     movq $0, %rdx    # long i = 0;
 
 while_my_str_cpy:
-    movq (%rsi, %rdx, 1), %rcx
-
-    ; movq %rdx, %rcx
-    ; addq %rsi, %rcx
+    movb (%rsi, %rdx, 1), %al
     
-    movb (%rcx), %al
     testb %al, %al              # while (src[i] != '\0')
     je break_while_my_str_cpy
 
     cmpq %rdx, maxKeySize  # && (i < MAX_KEY_SIZE)
     jle break_while_my_str_cpy
 
-    movq (%rdi, %rdx, 1), %r8
-
-    ; movq %rdx, %r8
-    ; addq %rdi, %r8
-
-    movb (%r8), %al
-    movb (%rcx), %al     # dest[i] = src[i]
+    movb %al, (%rdi, %rdx, 1)     # dest[i] = src[i]
     incq %rdx            # i++
     jmp while_my_str_cpy
 
 break_while_my_str_cpy:
-    movq (%rdi, %rdx, 1), %rcx
-
-    ; movq %rdx, %rcx
-    ; addq %rdi, %rcx
-    
-    movb $0, (%rcx)     # dest[i] = '\0'
+    movb $0, (%rdi, %rdx, 1)     # dest[i] = '\0'
 
 fill_zeros:
     cmpq %rdx, maxKeySize  # while (i < MAX_KEY_SIZE)
     jle finish_my_str_cpy
 
-    movq (%rdi, %rdx, 1), %rcx
-
-    ; movq %rdx, %rcx
-    ; addq %rdi, %rcx
-
-    movb $0, (%rcx)     # dest[i] = '\0
+    movb $0, (%rdi, %rdx, 1)     # dest[i] = '\0
     incq %rdx           # i++
 
     jmp fill_zeros
@@ -107,21 +87,19 @@ my_str_cmp:         # int my_str_cmp(char * s1, char * s2)
     pushq %rbp
     movq %rsp, %rbp
 
-    movq %rdi, %rdx   # move s1 into rdx
-    movq %rsi, %rcx   # move s2 into rcx
+    movq %rdi, %rdx   # char * s1_tmp = s1
+    movq %rsi, %rcx   # char * s2_tmp = s2
     movq $1, %r10     # long i = 1;
 
 while_my_str_cmp:
-    movq (%rdi), %r8   # loading 8 bytes of s1 into r8
-    movq (%rsi), %r9   # loading 8 bytes of s2 into r9
-
-    cmpq %r8, %r9    # if the current 8 bytes of s1 == curr 8 bytes of s2
-    je my_str_cmp_bytes_equal
-
+    movq (%rdi), %r8   # unsigned long c1 = *(unsigned long *)s1_tmp
+    movq (%rsi), %r9   # unsigned long c2 = *(unsigned long *)s2_tmp
+    
     BSWAP %r8       # by default in little endian so swap to get in big endian notation
     BSWAP %r9
 
-    cmpq %r8, %r9          # compare difference of (s2 - s1)
+    cmpq %r8, %r9    # if the current 8 bytes of s1 == curr 8 bytes of s2
+    je my_str_cmp_bytes_equal
     jg my_str_cmp_smaller
     jl my_str_cmp_greater
 
@@ -606,7 +584,7 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     pushq %r13
     pushq %r13
 
-    testq %rsi, %rdi   # if (table == NULL)
+    testq %rdi, %rdi   # if (table == NULL)
     je insert_violation
 
     testq %rsi, %rsi   # if (word == NULL)
@@ -718,33 +696,22 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     movq %r13, 8(%rdx)  # new->value = value;
     movq $0x0, 16(%rdx) # new->next = NULL;
 
-    movq 24(%rbx, %rcx, 8), %rax
+    movq 24(%rbx, %rcx, 8), %rax  # Node * head = table->array[targetIdx]
 
-    ; movq %rcx, %rax
-    ; imulq $8, %rax
-    ; addq 24(%rbx), %rax
-
-    # overwriting rcx is fine here since we won't need it anymore
-    # 24(%rbx) is essentially ** array so at the end of last statement,
-    # rax doesnt have addr of table->array[targetIndex]. if we want the pointer
-    # at this index, we need to dereference it
-
-    movq (%rax), %rcx    # Node * head = table->array[targetIdx]
-
-    testq %rcx, %rcx    # if (head == NULL)
+    testq %rax, %rax    # if (head == NULL)
     je insert_list_empty
+
+    movq %rax, %rcx
 
 insert_while:
    testq %rcx, %rcx    # while (head != NULL)
    je break_insert_while
 
-   movq (%rcx), %rdi  # (%rcx) = temp->word
+   movq (%rcx), %rdi  # (%rcx) = head->word
    movq %r12, %rsi   # r10 = char * word
 
    # the only thing we need for future statements is head so we preserve it
 
-   pushq %rcx
-   pushq %rcx
    pushq %rdx
    pushq %rdx
 
@@ -752,8 +719,6 @@ insert_while:
 
    popq %rdx
    popq %rdx
-   popq %rcx
-   popq %rcx
 
    testq %rax, %rax     # if (my_str_cmp(head->word, word) == 0)
    je insert_match_found
@@ -784,7 +749,7 @@ insert_list_empty:
     # but just does so in place and won't update the actual list
    # doing movq %rdx, (%rcx) will throw seg fault since %rcx is alr 0x0
 
-   movq %rdx, (%rax)   # table->array[targetIdx] = new;
+   movq %rdx, 24(%rbx, %rcx, 8)   # table->array[targetIdx] = new;
    jmp insert_done
 
 insert_err_word:
