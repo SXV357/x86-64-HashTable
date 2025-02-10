@@ -92,8 +92,8 @@ my_str_cmp:         # int my_str_cmp(char * s1, char * s2)
     movq $1, %r10     # long i = 1;
 
 while_my_str_cmp:
-    movq (%rdi), %r8   # unsigned long c1 = *(unsigned long *)s1_tmp
-    movq (%rsi), %r9   # unsigned long c2 = *(unsigned long *)s2_tmp
+    movq (%rdx), %r8   # unsigned long c1 = *(unsigned long *)s1_tmp
+    movq (%rcx), %r9   # unsigned long c2 = *(unsigned long *)s2_tmp
     
     BSWAP %r8       # by default in little endian so swap to get in big endian notation
     BSWAP %r9
