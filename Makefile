@@ -14,12 +14,12 @@ asm-old-test: src/Old/hash-table-old.s src/Old/hash-table-old.c tests/Old/hash-t
 	$(CC) $(ASM_FLAGS) src/Old/hash-table-old.s src/Old/hash-table-old.c tests/Old/hash-table-asm-test-old.c -o asm-old-test
 
 # C implementation(new)
-c-opt-test: src/New/hash-table-opt.c tests/New/hash-table-c-test-opt.c
-	$(CC) $(CFLAGS) src/New/hash-table-opt.c tests/New/hash-table-c-test-opt.c -o c-opt-test
+c-opt-test: src/New/hash-table-opt.c src/str.c tests/New/hash-table-c-test-opt.c
+	$(CC) $(CFLAGS) src/New/hash-table-opt.c src/str.c tests/New/hash-table-c-test-opt.c -o c-opt-test
 
 # x86 implementation(new)
-asm-opt-test: src/New/hash-table-opt.s src/New/hash-table-opt.c tests/New/hash-table-asm-test-opt.c
-	$(CC) $(ASM_FLAGS) src/New/hash-table-opt.s src/New/hash-table-opt.c tests/New/hash-table-asm-test-opt.c -o asm-opt-test
+asm-opt-test: src/New/hash-table-opt.s src/New/hash-table-opt.c src/str.c tests/New/hash-table-asm-test-opt.c
+	$(CC) $(ASM_FLAGS) src/New/hash-table-opt.s src/New/hash-table-opt.c src/str.c tests/New/hash-table-asm-test-opt.c -o asm-opt-test
 
 clean:
 	rm -f c-old-test asm-old-test c-opt-test asm-opt-test

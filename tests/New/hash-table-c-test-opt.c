@@ -5,9 +5,11 @@
 #include <assert.h>
 #include <string.h>
 #include "../../src/hash-table.h"
+#include "../../src/str.h"
 
 // For testing the new C implementation
 
+// function forward declarations
 void test_init();
 void test_hash(Table * table);
 
@@ -69,12 +71,33 @@ void test_hash(Table * table) {
     // invalid values
     assert(hash(table, NULL) == -1);
     assert(hash(table, "") == -1);
-    assert(hash(NULL, "something") == -1);
+
+    char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(curr);
+    my_str_cpy(curr, "something");
+
+    assert(hash(NULL, curr) == -1);
     assert(hash(NULL, "") == -1);
     assert(hash(NULL, NULL) == -1);
 
     // general cases
-    char *words[] = {"hello", "bye", "see", "flag"};
+    char *w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w1);
+    my_str_cpy(w1, "hello");
+
+    char *w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w2);
+    my_str_cpy(w2, "bye");
+
+    char *w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w3);
+    my_str_cpy(w3, "see");
+
+    char *w4 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w4);
+    my_str_cpy(w4, "flag");
+    
+    char *words[] = {w1, w2, w3, w4};
     long indices[4] = {113, 77, 178, 237}; // UPDATE 2
 
     for (int i = 0; i < 4; i++) {
@@ -106,7 +129,10 @@ void test_init() {
 
 void test_insert(Table * table) {
     // brand new key-value pair
-    char *keyOne = "Hello";
+    char *keyOne = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(keyOne);
+    my_str_cpy(keyOne, "Hello");
+
     long valOne = 15;
     bool insertOne = insert(table, keyOne, valOne);
     assert(insertOne);
@@ -130,7 +156,11 @@ void test_insert(Table * table) {
     int n = sizeof(vals) / sizeof(long);
 
     for (int i = 0; i < n; i++) {
-        bool insertCurr = insert(table, keys[i], vals[i]);
+        char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
+        assert(curr);
+        my_str_cpy(curr, keys[i]);
+
+        bool insertCurr = insert(table, curr, vals[i]);
         assert(insertCurr);
     }
 
@@ -142,17 +172,30 @@ void test_insert(Table * table) {
     assert(table->nWords == 17);
 
     // value is less than 0
-    bool insertInvalidTwo = insert(table, "hello", -57);
+    char *w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w1);
+    my_str_cpy(w1, "hello");
+
+    bool insertInvalidTwo = insert(table, w1, -57);
     assert(!insertInvalidTwo);
     assert(table->nWords == 17);
 
     // mix of invalid insert arguments
-    bool insertInvalidThree = insert(table, "", 15);
-    bool insertInvalidFour = insert(table, "", -10);
+    char *w2, *w3;
+    w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w2);
+    my_str_cpy(w2, "");
+
+    w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w3);
+    my_str_cpy(w3, "something");
+
+    bool insertInvalidThree = insert(table, w2, 15);
+    bool insertInvalidFour = insert(table, w2, -10);
     bool insertInvalidFive = insert(table, NULL, -110);
-    bool insertInvalidSix = insert(NULL, "something", 42);
-    bool insertInvalidSeven = insert(NULL, "", 32);
-    bool insertInvalidEight = insert(NULL, "", -23);
+    bool insertInvalidSix = insert(NULL, w3, 42);
+    bool insertInvalidSeven = insert(NULL, w2, 32);
+    bool insertInvalidEight = insert(NULL, w2, -23);
     bool insertInvalidNine = insert(NULL, NULL, 94);
     bool insertInvalidTen = insert(NULL, NULL, -5);
 
@@ -161,20 +204,32 @@ void test_insert(Table * table) {
 
 void test_lookup(Table * table) {
     // existent key
-    char *existent = "banana";
-    bool lookupOne = lookup(table, existent);
+    char *w1, *w2, *w3;
+
+    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w1);
+    my_str_cpy(w1, "banana");
+
+    w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w2);
+    my_str_cpy(w2, "diablo");
+
+    w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w3);
+    my_str_cpy(w3, "");
+
+    bool lookupOne = lookup(table, w1);
     assert(lookupOne);
 
     // non-existent key
-    char *nonExistent = "diablo";
-    bool lookupTwo = lookup(table, nonExistent);
+    bool lookupTwo = lookup(table, w2);
     assert(!lookupTwo);
 
     // invalid values
     bool lookupThree = lookup(table, NULL);
-    bool lookupFour = lookup(table, "");
-    bool lookupFive = lookup(NULL, "banana");
-    bool lookupSix = lookup(NULL, "diablo");
+    bool lookupFour = lookup(table, w3);
+    bool lookupFive = lookup(NULL, w1);
+    bool lookupSix = lookup(NULL, w2);
     bool lookupSeven = lookup(NULL, NULL);
 
     // TO DO: tests for checking if after a successful lookup, that element is moved to front of chain
@@ -184,16 +239,40 @@ void test_lookup(Table * table) {
 
 void test_update(Table * table) {
     // update the value of an existing key
-    char *existingKey = "under";
+    char *w1, *w2, *w3, *w4, *w5, *w6;
+
+    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w1);
+    my_str_cpy(w1, "under");
+
+    w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w2);
+    my_str_cpy(w2, "formula");
+
+    w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w3);
+    my_str_cpy(w3, "elephant");
+
+    w4 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w4);
+    my_str_cpy(w4, "");
+
+    w5 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w5);
+    my_str_cpy(w5, "blabla");
+
+    w6 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w6);
+    my_str_cpy(w6, "ajdhjkfe");
+
     long newValOne = 192021;
-    bool updateOne = update(table, existingKey, newValOne);
+    bool updateOne = update(table, w1, newValOne);
     assert(updateOne);
     assert(table->nWords == 17);
 
     // update the value of a non-existent key
-    char *nonExistentKey = "formula";
     long newValTwo = 489321;
-    bool updateTwo = update(table, nonExistentKey, newValTwo);
+    bool updateTwo = update(table, w2, newValTwo);
     assert(!updateTwo);
     assert(table->nWords == 18);
 
@@ -201,17 +280,17 @@ void test_update(Table * table) {
     bool updateThree = update(table, NULL, 45);
     assert(!updateThree);
 
-    bool updateFour = update(table, "elephant", -100);
+    bool updateFour = update(table, w3, -100);
     assert(!updateFour);
 
     // mix of other invalid update args
-    bool updateFive = update(table, "", 68);
-    bool updateSix = update(table, "", -76);
+    bool updateFive = update(table, w4, 68);
+    bool updateSix = update(table, w4, -76);
     bool updateSeven = update(table, NULL, -43);
-    bool updateEight = update(NULL, "", 90);
-    bool updateNine = update(NULL, "", -36);
-    bool updateTen = update(NULL, "blabla", 11);
-    bool updateEleven = update(NULL, "ajdhjkfe", 34);
+    bool updateEight = update(NULL, w4, 90);
+    bool updateNine = update(NULL, w4, -36);
+    bool updateTen = update(NULL, w5, 11);
+    bool updateEleven = update(NULL, w6, 34);
     bool updateTwelve = update(NULL, NULL, 1111);
     bool updateThirteen = update(NULL, NULL, -765);
 
@@ -220,18 +299,32 @@ void test_update(Table * table) {
 
 void test_get(Table * table) {
     // valid key
-    long getOne = get(table, "carrot");
+    char *w1, *w2, *w3;
+
+    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w1);
+    my_str_cpy(w1, "carrot");
+
+    w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w2);
+    my_str_cpy(w2, "blablah");
+
+    w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w3);
+    my_str_cpy(w3, "");
+
+    long getOne = get(table, w1);
     assert(getOne == 98765);
 
     // non-existent valid key
-    long getTwo = get(table, "blablah");
+    long getTwo = get(table, w2);
     assert(getTwo == -1);
 
     // invalid values
     long getThree = get(table, NULL);
-    long getFour = get(table, "");
-    long getFive = get(NULL, "carrot");
-    long getSix = get(NULL, "blablah");
+    long getFour = get(table, w3);
+    long getFive = get(NULL, w1);
+    long getSix = get(NULL, w2);
     long getSeven = get(NULL, NULL);
 
     assert(getThree + getFour + getFive + getSix + getSeven == -5);
@@ -239,28 +332,66 @@ void test_get(Table * table) {
 
 void test_delete(Table * table) {    
     // delete head in a bucket with > 1 node
-    long idxOne = hash(table, "nest");
-    bool deleteOne = delete(table, "nest");
+    char *w1, *w2, *w3, *w4, *w5, *w6, *w7, *w8, *w9;
+
+    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w1);
+    my_str_cpy(w1, "nest");
+
+    w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w2);
+    my_str_cpy(w2, "yarn");
+
+    w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w3);
+    my_str_cpy(w3, "under");
+
+    w4 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w4);
+    my_str_cpy(w4, "boat");
+
+    w5 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w5);
+    my_str_cpy(w5, "banana");
+
+    w6 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w6);
+    my_str_cpy(w6, "blablah");
+
+    w7 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w7);
+    my_str_cpy(w7, "");
+
+    w8 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w8);
+    my_str_cpy(w8, "igloo");
+
+    w9 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w9);
+    my_str_cpy(w9, "AK47");
+
+    long idxOne = hash(table, w1);
+    bool deleteOne = delete(table, w1);
     assert(deleteOne);
     assert(table->nWords == 17);
-    assert(!strcmp(table->array[idxOne]->word, "yarn"));
+    assert(!strcmp(table->array[idxOne]->word, w2));
 
     // delete non-head in a bucket with > 1 node
-    long idxTwo = hash(table, "under");
-    bool deleteTwo = delete(table, "under");
+    long idxTwo = hash(table, w3);
+    bool deleteTwo = delete(table, w3);
     assert(deleteTwo);
     assert(table->nWords == 16);
-    assert(!strcmp(table->array[idxTwo]->word, "boat"));
+    assert(!strcmp(table->array[idxTwo]->word, w4));
 
     // delete only node in a bucket
-    long idxThree = hash(table, "banana");
-    bool deleteThree = delete(table, "banana");
+    long idxThree = hash(table, w5);
+    bool deleteThree = delete(table, w5);
     assert(deleteThree);
     assert(table->nWords == 15);
     assert(table->array[idxThree] == NULL);
 
     // delete a non-existent key
-    bool deleteFour = delete(table, "blablah");
+    bool deleteFour = delete(table, w6);
     assert(!deleteFour);
     assert(table->nWords == 15);
 
@@ -270,10 +401,10 @@ void test_delete(Table * table) {
     assert(table->nWords == 15);
 
     // mix of other invalid delete args
-    bool deleteSix = delete(table, "");
-    bool deleteSeven = delete(NULL, "igloo");
-    bool deleteEight = delete(NULL, "");
-    bool deleteNine = delete(NULL, "AK47");
+    bool deleteSix = delete(table, w7);
+    bool deleteSeven = delete(NULL, w8);
+    bool deleteEight = delete(NULL, w7);
+    bool deleteNine = delete(NULL, w9);
     
     assert((!deleteSix) && (!deleteSeven) && (!deleteEight) && (!deleteNine));
 }

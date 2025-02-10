@@ -14,6 +14,7 @@
         "_stdio.h": "c",
         "_stdlib.h": "c",
         "_malloc.h": "c",
-        "hash-table-chain.h": "c"
+        "hash-table-chain.h": "c",
+        "str.h": "c"
     }
 }
