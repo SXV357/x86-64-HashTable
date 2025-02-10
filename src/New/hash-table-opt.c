@@ -4,7 +4,7 @@
 #include <string.h>
 #include <assert.h>
 #include "../hash-table.h"
-#include "str.h"
+#include "../str.h"
 
 Table * init(long maxWords) {
     long bucketSizes[] = { 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072 };
