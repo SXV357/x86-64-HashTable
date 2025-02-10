@@ -2,108 +2,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <assert.h>
-#include "../hash-table-chain.h"
-
-#define MAX_KEY_SIZE (32) // each key(char *) will be 32 bytes long
-
-// forward declarations for the custom string funcs
-void my_str_cpy(char *, char *);
-int my_str_len(char *);
-int my_str_cmp_opt(char *, char *);
-int my_str_cmp_opt(char *, char *); // optimal version that uses long comparisons instead of byte operations
-char * my_str_dup(char *);
-
-void my_str_cpy(char * dest, char * src) {
-    int i = 0;
-    while ((src[i] != '\0') && (i < MAX_KEY_SIZE)) {
-        dest[i] = src[i];
-        i++;
-    }
-
-    dest[i] = '\0';
-
-    while (i < MAX_KEY_SIZE) {
-        dest[i] = '\0';
-        i++;
-    }
-}
-
-int my_str_len(char *s) {
-    char *temp = s;
-    int len = 0;
-    
-    while (*temp++ != '\0') len++;
-
-    return len;
-}
-
-int my_str_cmp_old(char * s1, char * s2) {
-    char *s1_tmp = s1;
-    char *s2_tmp = s2;
-    
-    while ((*s1_tmp != '\0') && (*s2_tmp != '\0')) {
-        if (*s1_tmp < *s2_tmp) {
-            return -1;
-        } else if (*s1_tmp > *s2_tmp) {
-            return 1;
-        }
-
-        s1_tmp++;
-        s2_tmp++;
-    }
-    
-    if ((*s1_tmp == '\0') && (*s2_tmp == '\0')) {
-        return 0;
-    }
-
-    return *s1 == '\0' ? -1 : 1;
-}
-
-int my_str_cmp_opt(char * s1, char * s2) {
-    // both strings are 32 bytes long(padded with 0's as well)
-    char *s1_tmp = s1;
-    char *s2_tmp = s2;
-
-    int i = 1;
-
-    while (true) {
-        unsigned long c1 = __builtin_bswap64(*(unsigned long *)s1_tmp);
-        unsigned long c2 = __builtin_bswap64(*(unsigned long *)s2_tmp);
-
-        if (c1 == c2) {
-            if (i++ == 4) {
-                break;
-            }
-
-            s1_tmp += 8;
-            s2_tmp += 8;
-            continue;
-
-        } else {
-            return (c1 < c2) ? -1 : 1;
-        }
-
-    }
-
-    return 0;
-}
-
-char * my_str_dup(char * s) {
-    char * res = calloc(32, sizeof(char));
-    if (!res) {
-        return NULL;
-    }
-
-    my_str_cpy(res, s);
-    return res;
-}
+#include "../hash-table.h"
 
 Table * init(long maxWords) {
-    long bucketSizes[] = { 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072 };
-    long nBucketSizes = sizeof(bucketSizes)/sizeof(long);
+    long primeNumbers[] = { 67, 131, 257, 521, 1031, 2053, 4099, 8209, 16411, 32771, 65537, 131073 };
+    long nPrimeNumbers = sizeof(primeNumbers)/sizeof(long);
 
-    if ((maxWords <= 0) || (maxWords > bucketSizes[nBucketSizes - 1])) {
+    if ((maxWords <= 0) || (maxWords > primeNumbers[nPrimeNumbers - 1])) {
         return NULL;
     }
 
@@ -113,11 +18,11 @@ Table * init(long maxWords) {
         return NULL;
     }
 
-    table->nBuckets = bucketSizes[nBucketSizes - 1];
+    table->nBuckets = primeNumbers[nPrimeNumbers-1];
 
-    for (int i = 0; i < nBucketSizes; i++) {
-       if (maxWords < bucketSizes[i]) {
-            table->nBuckets =  bucketSizes[i];
+    for (int i = 0; i < nPrimeNumbers; i++) {
+       if (maxWords < primeNumbers[i]) {
+            table->nBuckets =  primeNumbers[i];
             break;
        }
     }
@@ -141,62 +46,38 @@ Table * init(long maxWords) {
 }
 
 long hash(Table * table, char * word) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0)) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0)) {
         return -1;
     }
     
     long hashNum = 1;
-    long len = my_str_len(word);
+    long len = strlen(word);
 
     for (long i = 0; i < len; i++) {
-        hashNum = ((hashNum << 5) - hashNum) + word[i];
+        hashNum = 31 * hashNum + word[i];
     }
 
-    return hashNum & (table->nBuckets - 1);
+    return hashNum % table->nBuckets;
 }
 
-/**
- * Looks up the key specified by the word parameter in the hash table and return true if it exists
- */
 bool lookup(Table * table, char * word) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0)) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0)) {
         return false;
     }
 
     long hashNum = hash(table, word);
 
-    Node * prev = NULL; // track prev pointer
-    Node ** head = &(table->array[hashNum]); // maintain this for head insertion later
     Node * elem = table->array[hashNum];
 
-    while ((elem != NULL) && (!my_str_cmp_opt(elem->word, word))) {
-      prev = elem;
+    while (elem != NULL && strcmp(elem->word,word) != 0) {
       elem = elem->next;
     }
 
-    if (elem == NULL) {
-        // the element wasn't found so return false
-        return false;
-    }
-
-    // if prev = NULL, it means the node was already at the head of the list so no need to delete and re-insert
-    if (prev != NULL) {
-        // means the node found was in the middle or end of the list so need to delete and re-insert at head
-
-        // deleting elem
-        prev->next = elem->next;
-
-        // re-insert at head
-            // we want to make sure this node already isn't at the head of the list
-        elem->next = *head;
-        *head = elem;
-    }
-
-    return true;
+    return elem == NULL ? false : true;
 }
 
 long get(Table * table, char * word) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0)) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0)) {
         return -1;
     }
 
@@ -204,17 +85,17 @@ long get(Table * table, char * word) {
     Node * head = table->array[targetIdx];
 
     while (head) {
-        if (!my_str_cmp_opt(head->word, word)) {
+        if (!strcmp(head->word, word)) {
             return head->value;
         }
         head = head->next;
     }
 
-    return -1; // non-existent key
+    return -1;
 }
 
 bool insert(Table * table, char * word, long value) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0) || (value < 0) || (table->nWords > table->maxWords)) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0) || (value < 0) || (table->nWords > table->maxWords)) {
         return false;
     }
 
@@ -226,13 +107,14 @@ bool insert(Table * table, char * word, long value) {
         return false;
     }
 
-    new->word = calloc(32, sizeof(char)); // all new words being inserted have space for 32 bytes
+    new->word = malloc(strlen(word) + 1);
     if (new->word == NULL) {
         perror("(insert) error allocating memory for the word field");
         return false;
     }
 
-    my_str_cpy(new->word, word);
+    strcpy(new->word, word);
+    new->word[strlen(word)] = '\0';
     new->value = value;
     new->next = NULL;
 
@@ -242,7 +124,7 @@ bool insert(Table * table, char * word, long value) {
         table->array[targetIdx] = new;
     } else {
         while (head) {
-            if (!my_str_cmp_opt(head->word, word)) {
+            if (strcmp(head->word, word) == 0) {
                 if (head->value == value) {
                     return false;
                 } else {
@@ -263,7 +145,7 @@ bool insert(Table * table, char * word, long value) {
 }
 
 bool delete(Table * table, char * word) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0)) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0)) {
         return false;
     }
 
@@ -274,7 +156,7 @@ bool delete(Table * table, char * word) {
     bool found = false;
 
     while (head) {
-        if (!my_str_cmp_opt(head->word, word)) {
+        if (strcmp(head->word, word) == 0) {
             found = true;
             Node * temp = head;
 
@@ -302,7 +184,7 @@ bool delete(Table * table, char * word) {
 }
 
 bool update(Table * table, char * word, long value) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0) || (value < 0)) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0) || (value < 0)) {
         return false;
     }
 
@@ -310,7 +192,7 @@ bool update(Table * table, char * word, long value) {
     Node * elem = table->array[hashNum];
 
     while (elem) {
-        if (!my_str_cmp_opt(elem->word, word)) {
+        if (strcmp(elem->word, word) == 0) {
             elem->value = value;
             return true;
         } else if (elem->next == NULL) {
@@ -329,7 +211,7 @@ bool update(Table * table, char * word, long value) {
         return false;
     }
 
-    e->word = my_str_dup(word);
+    e->word = strdup(word);
     e->value = value;
     e->next = NULL;
 

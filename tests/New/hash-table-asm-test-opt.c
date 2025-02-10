@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../../src/hash-table-chain.h"
+#include "../../src/hash-table.h"
 
 // For testing the new x86 implementation
 
