@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "str.h"
 
 void my_str_cpy(char * dest, char * src) {
