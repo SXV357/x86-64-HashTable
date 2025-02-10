@@ -76,9 +76,12 @@ bool lookup(Table * table, char * word) {
     Node ** head = &(table->array[hashNum]); // maintain this for head insertion later
     Node * elem = table->array[hashNum];
 
-    while ((elem != NULL) && (!my_str_cmp_opt(elem->word, word))) {
-      prev = elem;
-      elem = elem->next;
+    while (elem) {
+        if (!my_str_cmp_opt(elem->word, word)) {
+            break;
+        }
+        prev = elem;
+        elem = elem->next;
     }
 
     if (elem == NULL) {

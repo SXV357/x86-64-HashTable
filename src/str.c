@@ -57,8 +57,8 @@ int my_str_cmp_opt(char * s1, char * s2) {
     int i = 1;
 
     while (true) {
-        unsigned long c1 = __builtin_bswap64(*(unsigned long *)s1_tmp);
-        unsigned long c2 = __builtin_bswap64(*(unsigned long *)s2_tmp);
+        unsigned long c1 = *(unsigned long *)s1_tmp;
+        unsigned long c2 = *(unsigned long *)s2_tmp;
 
         if (c1 == c2) {
             if (i++ == 4) {
