@@ -374,14 +374,14 @@ void test_delete(Table * table) {
     bool deleteOne = delete(table, w1);
     assert(deleteOne);
     assert(table->nWords == 17);
-    assert(!strcmp(table->array[idxOne]->word, w2));
+    assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
 
     // delete non-head in a bucket with > 1 node
     long idxTwo = hash(table, w3);
     bool deleteTwo = delete(table, w3);
     assert(deleteTwo);
     assert(table->nWords == 16);
-    assert(!strcmp(table->array[idxTwo]->word, w4));
+    assert(!my_str_cmp_opt(table->array[idxTwo]->word, w4));
 
     // delete only node in a bucket
     long idxThree = hash(table, w5);
