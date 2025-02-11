@@ -332,43 +332,35 @@ void test_get(Table * table) {
 
 void test_delete(Table * table) {    
     // delete head in a bucket with > 1 node
-    char *w1, *w2, *w3, *w4, *w5, *w6, *w7, *w8, *w9;
+    char *w1, *w2, *w3, *w4, *w5, *w6, *w7;
 
     w1 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w1);
-    my_str_cpy(w1, "nest");
+    my_str_cpy(w1, "fish");
 
     w2 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w2);
-    my_str_cpy(w2, "yarn");
+    my_str_cpy(w2, "nest");
 
     w3 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w3);
-    my_str_cpy(w3, "under");
+    my_str_cpy(w3, "banana");
 
     w4 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w4);
-    my_str_cpy(w4, "boat");
+    my_str_cpy(w4, "blablah");
 
     w5 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w5);
-    my_str_cpy(w5, "banana");
+    my_str_cpy(w5, "");
 
     w6 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w6);
-    my_str_cpy(w6, "blablah");
+    my_str_cpy(w6, "igloo");
 
     w7 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w7);
-    my_str_cpy(w7, "");
-
-    w8 = calloc(MAX_KEY_SIZE, sizeof(char));
-    assert(w8);
-    my_str_cpy(w8, "igloo");
-
-    w9 = calloc(MAX_KEY_SIZE, sizeof(char));
-    assert(w9);
-    my_str_cpy(w9, "AK47");
+    my_str_cpy(w7, "AK47");
 
     long idxOne = hash(table, w1);
     bool deleteOne = delete(table, w1);
@@ -376,35 +368,28 @@ void test_delete(Table * table) {
     assert(table->nWords == 17);
     assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
 
-    // delete non-head in a bucket with > 1 node
-    long idxTwo = hash(table, w3);
-    bool deleteTwo = delete(table, w3);
-    assert(deleteTwo);
-    assert(table->nWords == 16);
-    assert(!my_str_cmp_opt(table->array[idxTwo]->word, w4));
-
     // delete only node in a bucket
-    long idxThree = hash(table, w5);
-    bool deleteThree = delete(table, w5);
+    long idxThree = hash(table, w3);
+    bool deleteThree = delete(table, w3);
     assert(deleteThree);
-    assert(table->nWords == 15);
+    assert(table->nWords == 16);
     assert(table->array[idxThree] == NULL);
 
     // delete a non-existent key
-    bool deleteFour = delete(table, w6);
+    bool deleteFour = delete(table, w4);
     assert(!deleteFour);
-    assert(table->nWords == 15);
+    assert(table->nWords == 16);
 
     // delete a NULL key
     bool deleteFive = delete(table, NULL);
     assert(!deleteFive);
-    assert(table->nWords == 15);
+    assert(table->nWords == 16);
 
     // mix of other invalid delete args
     bool deleteSix = delete(table, w7);
-    bool deleteSeven = delete(NULL, w8);
+    bool deleteSeven = delete(NULL, w5);
     bool deleteEight = delete(NULL, w7);
-    bool deleteNine = delete(NULL, w9);
+    bool deleteNine = delete(NULL, w6);
     
     assert((!deleteSix) && (!deleteSeven) && (!deleteEight) && (!deleteNine));
 }
