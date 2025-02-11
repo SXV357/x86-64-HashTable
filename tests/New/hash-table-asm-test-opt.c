@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "../../src/hash-table.h"
+#include "../../src/str.h"
 
 // For testing the new x86 implementation
 
@@ -111,7 +112,10 @@ void test_init() {
 
 void test_hash(Table * table) {
   // test for a valid character
-  char *word = "hello";
+  char *word = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(word);
+  my_str_cpy(word, "hello");
+
   long cHashVal = hash(table, word);
   long asmHashVal = ASM_hash(table, word);
 
@@ -122,26 +126,51 @@ void test_hash(Table * table) {
   assert(ASM_hash(table, "") == -1);
 
   // test for NULL table
-  assert(ASM_hash(NULL, "something") == -1);
-  assert(ASM_hash(NULL, "") == -1);
+  char *w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(w1);
+  my_str_cpy(w1, "something");
+
+  char *w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(w2);
+  my_str_cpy(w2, "");
+
+  assert(ASM_hash(NULL, w1) == -1);
+  assert(ASM_hash(NULL, w2) == -1);
   assert(ASM_hash(NULL, NULL) == -1);
 }
 
 void test_insert(Table * table) {
   // brand new key-value pair
-  char *keyOne = "Hello";
+  char *w1, *w2, *w3, *w4;
+  
+  w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(w1);
+  my_str_cpy(w1, "Hello");
+
+  w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(w2);
+  my_str_cpy(w2, "hello");
+
+  w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(w3);
+  my_str_cpy(w3, "");
+
+  w4 = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(w4);
+  my_str_cpy(w4, "something");
+
   long valOne = 15;
-  bool insertOne = ASM_insert(table, keyOne, valOne);
+  bool insertOne = ASM_insert(table, w1, valOne);
   assert(insertOne);
   assert(table->nWords == 1);
 
   // same key-value pair
-  bool insertTwo = ASM_insert(table, keyOne, valOne);
+  bool insertTwo = ASM_insert(table, w1, valOne);
   assert(!insertTwo);
   assert(table->nWords == 1);
 
   // same key but different value
-  bool insertThree = ASM_insert(table, keyOne, 500);
+  bool insertThree = ASM_insert(table, w1, 500);
   assert(insertThree);
   assert(table->nWords == 1);
 
@@ -150,7 +179,11 @@ void test_insert(Table * table) {
   int n = sizeof(vals) / sizeof(long);
 
   for (int i = 0; i < n; i++) {
-    bool insertCurr = ASM_insert(table, keys[i], vals[i]);
+    char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(curr);
+    my_str_cpy(curr, keys[i]);
+
+    bool insertCurr = ASM_insert(table, curr, vals[i]);
     assert(insertCurr);
   }
 
@@ -162,17 +195,17 @@ void test_insert(Table * table) {
   assert(table->nWords == 17);
 
   // negative value
-  bool insertInvalidTwo = ASM_insert(table, "hello", -30);
+  bool insertInvalidTwo = ASM_insert(table, w2, -30);
   assert(!insertInvalidTwo);
   assert(table->nWords == 17); 
 
   // NULL table and empty word tests
-  bool insertInvalidThree = ASM_insert(table, "", 15);
-  bool insertInvalidFour = ASM_insert(table, "", -10);
+  bool insertInvalidThree = ASM_insert(table, w3, 15);
+  bool insertInvalidFour = ASM_insert(table, w3, -10);
   bool insertInvalidFive = ASM_insert(table, NULL, -110);
-  bool insertInvalidSix = ASM_insert(NULL, "something", 42);
-  bool insertInvalidSeven = ASM_insert(NULL, "", 32);
-  bool insertInvalidEight = ASM_insert(NULL, "", -23);
+  bool insertInvalidSix = ASM_insert(NULL, w4, 42);
+  bool insertInvalidSeven = ASM_insert(NULL, w3, 32);
+  bool insertInvalidEight = ASM_insert(NULL, w3, -23);
   bool insertInvalidNine = ASM_insert(NULL, NULL, 94);
   bool insertInvalidTen = ASM_insert(NULL, NULL, -5);
 
@@ -182,11 +215,25 @@ void test_insert(Table * table) {
 
 void test_lookup(Table * table) {
    // existent key
-   bool lookupOne = ASM_lookup(table, "banana");
+   char *w1, *w2, *w3;
+
+   w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w1);
+   my_str_cpy(w1, "banana");
+
+   w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w2);
+   my_str_cpy(w2, "diablo");
+
+   w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w3);
+   my_str_cpy(w3, "");
+
+   bool lookupOne = ASM_lookup(table, w1);
    assert(lookupOne);
 
    // non-existent key
-   bool lookupTwo = ASM_lookup(table, "diablo");
+   bool lookupTwo = ASM_lookup(table, w2);
    assert(!lookupTwo);
 
    // NULL key
@@ -194,10 +241,10 @@ void test_lookup(Table * table) {
    assert(!lookupThree);
 
    // NULL table and empty word tests
-   bool lookupFour = ASM_lookup(NULL, "banana");
+   bool lookupFour = ASM_lookup(NULL, w1);
    bool lookupFive = ASM_lookup(NULL, NULL);
-   bool lookupSix = ASM_lookup(NULL, "");
-   bool lookupSeven = ASM_lookup(table, "");
+   bool lookupSix = ASM_lookup(NULL, w3);
+   bool lookupSeven = ASM_lookup(table, w3);
 
    // TO DO: test where after a successful lookup, the node is moved to front of chain
 
@@ -206,11 +253,29 @@ void test_lookup(Table * table) {
 
 void test_get(Table * table) {
   // valid key
-  long getOne = ASM_get(table, "carrot");
+  char *w1, *w2, *w3, *w4;
+
+  w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(w1);
+  my_str_cpy(w1, "carrot");
+
+  w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(w2);
+  my_str_cpy(w2, "blablah");
+
+  w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(w3);
+  my_str_cpy(w3, "something");
+
+  w4 = calloc(MAX_KEY_SIZE, sizeof(char));
+  assert(w4);
+  my_str_cpy(w4, "");
+
+  long getOne = ASM_get(table, w1);
   assert(getOne == 98765);
 
   // non-existent valid key
-  long getTwo = ASM_get(table, "blablah");
+  long getTwo = ASM_get(table, w2);
   assert(getTwo == -1);
 
   // invalid key
@@ -218,23 +283,53 @@ void test_get(Table * table) {
   assert(getThree == -1);
 
   // NULL table and empty key tests
-  long getFour = ASM_get(table, "");
-  long getFive = ASM_get(NULL, "carrot");
-  long getSix = ASM_get(NULL, "something");
+  long getFour = ASM_get(table, w4);
+  long getFive = ASM_get(NULL, w1);
+  long getSix = ASM_get(NULL, w3);
   long getSeven = ASM_get(NULL, NULL);
-  long getEight = ASM_get(NULL, "");
+  long getEight = ASM_get(NULL, w4);
 
   assert(getFour + getFive + getSix + getSeven + getEight == -5);
 }
 
 void test_update(Table * table) {
   // update value of an existing key
-  bool updateOne = ASM_update(table, "apple", 192021);
+  char *w1, *w2, *w3, *w4, *w5, *w6, *w7;
+
+   w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w1);
+   my_str_cpy(w1, "apple");
+
+   w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w2);
+   my_str_cpy(w2, "Kohli");
+
+   w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w3);
+   my_str_cpy(w3, "elephant");   
+
+   w4 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w4);
+   my_str_cpy(w4, "SMG");
+
+   w5 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w5);
+   my_str_cpy(w5, "");
+
+   w6 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w6);
+   my_str_cpy(w6, "blabla");
+
+   w7 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w7);
+   my_str_cpy(w7, "ajdhjkfe");
+
+  bool updateOne = ASM_update(table, w1, 192021);
   assert(updateOne);
   assert(table->nWords == 14);
 
   // update value of a non-existent key
-  bool updateTwo = ASM_update(table, "Kohli", 81);
+  bool updateTwo = ASM_update(table, w2, 81);
   assert(!updateTwo);
   assert(table->nWords == 15);
 
@@ -242,21 +337,21 @@ void test_update(Table * table) {
   bool updateThree = ASM_update(table, NULL, 67);
   assert(!updateThree);
 
-  bool updateFour = ASM_update(table, "elephant", -25);
+  bool updateFour = ASM_update(table, w3, -25);
   assert(!updateFour);
 
-  bool updateCurr = ASM_update(table, "SMG", -112);
+  bool updateCurr = ASM_update(table, w4, -112);
   assert(!updateCurr);
 
   // test NULL table and empty string
 
-  bool updateFive = ASM_update(table, "", 68);
-  bool updateSix = ASM_update(table, "", -76);
+  bool updateFive = ASM_update(table, w5, 68);
+  bool updateSix = ASM_update(table, w5, -76);
   bool updateSeven = ASM_update(table, NULL, -43);
-  bool updateEight = ASM_update(NULL, "", 90);
-  bool updateNine = ASM_update(NULL, "", -36);
-  bool updateTen = ASM_update(NULL, "blabla", 11);
-  bool updateEleven = ASM_update(NULL, "ajdhjkfe", 34);
+  bool updateEight = ASM_update(NULL, w5, 90);
+  bool updateNine = ASM_update(NULL, w5, -36);
+  bool updateTen = ASM_update(NULL, w6, 11);
+  bool updateEleven = ASM_update(NULL, w7, 34);
   bool updateTwelve = ASM_update(NULL, NULL, 1111);
   bool updateThirteen = ASM_update(NULL, NULL, -765);
 
@@ -266,31 +361,62 @@ void test_update(Table * table) {
 
 void test_delete(Table * table) {
   // delete head in bucket with > 1 node
-  char * keyOne = "nest";
-  long idxOne = ASM_hash(table, keyOne);
-  bool deleteOne = ASM_delete(table, keyOne);
+  char *w1, *w2, *w3, *w4, *w5, *w6, *w7, *w8;
+
+   w1 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w1);
+   my_str_cpy(w1, "nest");
+
+   w2 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w2);
+   my_str_cpy(w2, "yarn");
+
+   w3 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w3);
+   my_str_cpy(w3, "under");
+
+   w4 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w4);
+   my_str_cpy(w4, "boat");
+
+   w5 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w5);
+   my_str_cpy(w5, "banana");
+
+   w6 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w6);
+   my_str_cpy(w6, "RPG");
+
+   w7 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w7);
+   my_str_cpy(w7, "");
+
+   w8 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w8);
+   my_str_cpy(w8, "Rampage");
+
+  long idxOne = ASM_hash(table, w1);
+  bool deleteOne = ASM_delete(table, w1);
   assert(deleteOne);
   assert(table->nWords == 16);
-  assert(!strcmp(table->array[idxOne]->word, "yarn"));
+  assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
 
   // delete non-head in bucket with > 1 node
-  char *keyTwo = "under";
-  long idxTwo = ASM_hash(table, keyTwo);
-  bool deleteTwo = ASM_delete(table, keyTwo);
+  long idxTwo = ASM_hash(table, w3);
+  bool deleteTwo = ASM_delete(table, w3);
   assert(deleteTwo);
   assert(table->nWords == 15);
-  assert(!strcmp(table->array[idxTwo]->word, "boat"));
+  assert(!my_str_cmp_opt(table->array[idxTwo]->word, w4));
 
   // delete only node in a bucket
-  char *keyThree = "banana";
-  long idxThree = ASM_hash(table, keyThree);
-  bool deleteThree = ASM_delete(table, keyThree);
+  long idxThree = ASM_hash(table, w5);
+  bool deleteThree = ASM_delete(table, w5);
   assert(deleteThree);
   assert(table->nWords == 14);
   assert(table->array[idxThree] == NULL);
 
   // delete non-existent key
-  bool deleteFour = ASM_delete(table, "RPG");
+  bool deleteFour = ASM_delete(table, w6);
   assert(!deleteFour);
   assert(table->nWords == 14);
 
@@ -300,10 +426,10 @@ void test_delete(Table * table) {
   assert(table->nWords == 14);
 
   // NULL table and empty word tests
-  bool deleteSix = ASM_delete(table, "");
-  bool deleteSeven = ASM_delete(NULL, "banana");
-  bool deleteEight = ASM_delete(NULL, "");
-  bool deleteNine = ASM_delete(NULL, "Rampage");
+  bool deleteSix = ASM_delete(table, w7);
+  bool deleteSeven = ASM_delete(NULL, w5);
+  bool deleteEight = ASM_delete(NULL, w7);
+  bool deleteNine = ASM_delete(NULL, w8);
 
   assert((!deleteSix) && (!deleteSeven) && (!deleteEight) && (!deleteNine));
 }
