@@ -71,8 +71,8 @@ my_str_len:           # int my_str_len(char * s)
     movq $0, %rax    # int len = 0;
 
 while_my_str_len:
-    movb (%rsi), %al
-    testb %al, %al   # while (*temp != '\0')
+    movb (%rsi), %dl
+    testb %dl, %dl   # while (*temp != '\0')
     je finish_my_str_len
 
     incq %rax       # len++
@@ -307,18 +307,21 @@ ASM_hash:        # long ASM_hash(Table * table, char * word);
     pushq %r13
     pushq %r13
 
-    cmpq $0x0, %rdi   # if (table == NULL)
+    testq %rdi, %rdi   # if (table == NULL)
     je hash_violation
 
-    cmpq $0x0, %rsi   # if (word == NULL)
+    testq %rsi, %rsi   # if (word == NULL)
     je hash_violation
 
     movq %rdi, %rbx  # store table in rbx(ensure it doesn't get overwritten)
     movq %rsi, %r13  # store word in r13
 
     movq %r13, %rdi
+    xorq %rax, %rax
+
     call my_str_len
-    cmpq $0, %rax    # if (my_str_len(word) == 0)
+
+    testq %rax, %rax    # if (my_str_len(word) == 0)
     je hash_violation
 
     movq $1, %rdx   # long hashNum = 1
@@ -351,8 +354,8 @@ while_hash:
     addq %r9, %rax    # hashNum = ((hashNum << 5) - hashNum) + word[i]
     movq %rax, %rdx   # move the result back into hashNum
 
-    addq $1, %r8     # i++
-    addq $1, %r13    # word++
+    incq %r8    # i++
+    incq %r13    # word++
     jmp while_hash
 
 break_while_hash:
