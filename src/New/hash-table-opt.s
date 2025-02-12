@@ -565,7 +565,7 @@ get_violation:
 finish_get:
     popq %rbx
     popq %rbx
-    
+
     leave
     ret
 
@@ -837,14 +837,12 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
 
     movq %rax, %rdx   # long targetIdx = ASM_hash(table, word)
 
-    movq 24(%rdi, %rdx, 8), %rdx
+    movq 24(%rdi, %rdx, 8), %r9 # Node * head = table->array[targetIdx]
 
-    ; imulq $8, %rdx
-    ; addq 24(%rdi), %rdx
+    movq %rdx, %r10
+    imulq $8, %r10
+    addq 24(%rdi), %r10  # address of table->array[targetIdx]
 
-    movq %rdx, %r14    # saving this here for the case when match is found and prev = NULL
-
-    movq (%rdx), %rdx    # Node * head = table->array[targetIdx];
     movq $0x0, %rcx    # Node * prev = NULL;
     movq $0, %r8       # bool found = false;
 
@@ -852,20 +850,24 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
     movq %rsi, %r12   # r12 = word
 
 while_delete:
-    testq %rdx, %rdx  # while (head != NULL)
+    testq %r9, %r9  # while (head != NULL)
     je break_while_delete
 
-    movq (%rdx), %rdi   # (%rdx) contains pointer to head->word
+    movq (%r9), %rdi   # (%rdx) contains pointer to head->word
     movq %r12, %rsi     # r10 = char * word
 
     pushq %rdx
     pushq %rdx
     pushq %rcx
     pushq %r8
+    pushq %r9
+    pushq %r10
 
     xorq %rax, %rax
     call my_str_cmp
 
+    popq %r10
+    popq %r9
     popq %r8
     popq %rcx
     popq %rdx
@@ -874,25 +876,25 @@ while_delete:
     testq %rax, %rax   # if (my_str_cmp(head->word, word) == 0)
     je delete_match_found
 
-    movq %rdx, %rcx   # prev = head
-    movq 16(%rdx), %rdx  # head = head->next
+    movq %r9, %rcx   # prev = head
+    movq 16(%r9), %r9  # head = head->next
     jmp while_delete
 
 delete_match_found:
    movq $1, %r8     # found = true
-   movq %rdx, %r13  # Node * temp = head
+   movq %r9, %r13  # Node * temp = head
 
    testq %rcx, %rcx   # if (prev == NULL)
    je delete_prev_null
 
-   movq 16(%rdx), %rax
+   movq 16(%r9), %rax
    movq %rax, 16(%rcx)  # prev->next = head->next
 
    jmp delete_temp
 
 delete_prev_null:
-   movq 16(%rdx), %rax
-   movq %rax, (%r14)   # table->array[targetIdx] = head->next;
+   movq 16(%r9), %rax
+   movq %rax, (%r10)   # table->array[targetIdx] = head->next;
 
    jmp delete_temp
 

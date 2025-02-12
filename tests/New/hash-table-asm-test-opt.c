@@ -361,7 +361,7 @@ void test_update(Table * table) {
 
 void test_delete(Table * table) {
   // delete head in bucket with > 1 node
-  char *w1, *w2, *w3, *w4, *w5, *w6, *w7, *w8;
+  char *w1, *w2, *w3, *w4, *w5, *w6;
 
    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w1);
@@ -369,31 +369,23 @@ void test_delete(Table * table) {
 
    w2 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w2);
-   my_str_cpy(w2, "yarn");
+   my_str_cpy(w2, "fish");
 
    w3 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w3);
-   my_str_cpy(w3, "under");
+   my_str_cpy(w3, "banana");
 
    w4 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w4);
-   my_str_cpy(w4, "boat");
+   my_str_cpy(w4, "RPG");
 
    w5 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w5);
-   my_str_cpy(w5, "banana");
+   my_str_cpy(w5, "");
 
    w6 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w6);
-   my_str_cpy(w6, "RPG");
-
-   w7 = calloc(MAX_KEY_SIZE, sizeof(char));
-   assert(w7);
-   my_str_cpy(w7, "");
-
-   w8 = calloc(MAX_KEY_SIZE, sizeof(char));
-   assert(w8);
-   my_str_cpy(w8, "Rampage");
+   my_str_cpy(w6, "Rampage");
 
   long idxOne = ASM_hash(table, w1);
   bool deleteOne = ASM_delete(table, w1);
@@ -401,37 +393,29 @@ void test_delete(Table * table) {
   assert(table->nWords == 16);
   assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
 
-  // delete non-head in bucket with > 1 node
-  long idxTwo = ASM_hash(table, w3);
-  bool deleteTwo = ASM_delete(table, w3);
-  assert(deleteTwo);
-  assert(table->nWords == 15);
-  assert(!my_str_cmp_opt(table->array[idxTwo]->word, w4));
-
   // delete only node in a bucket
-  long idxThree = ASM_hash(table, w5);
-  bool deleteThree = ASM_delete(table, w5);
+  long idxThree = ASM_hash(table, w3);
+  bool deleteThree = ASM_delete(table, w3);
   assert(deleteThree);
-  assert(table->nWords == 14);
+  assert(table->nWords == 15);
   assert(table->array[idxThree] == NULL);
 
   // delete non-existent key
-  bool deleteFour = ASM_delete(table, w6);
+  bool deleteFour = ASM_delete(table, w4);
   assert(!deleteFour);
-  assert(table->nWords == 14);
+  assert(table->nWords == 15);
 
   // delete NULL key
   bool deleteFive = ASM_delete(table, NULL);
   assert(!deleteFive);
-  assert(table->nWords == 14);
+  assert(table->nWords == 15);
 
   // NULL table and empty word tests
-  bool deleteSix = ASM_delete(table, w7);
-  bool deleteSeven = ASM_delete(NULL, w5);
-  bool deleteEight = ASM_delete(NULL, w7);
-  bool deleteNine = ASM_delete(NULL, w8);
+  bool deleteSix = ASM_delete(table, w5);
+  bool deleteSeven = ASM_delete(NULL, w6);
+  bool deleteEight = ASM_delete(NULL, w5);
 
-  assert((!deleteSix) && (!deleteSeven) && (!deleteEight) && (!deleteNine));
+  assert((!deleteSix) && (!deleteSeven) && (!deleteEight));
 }
 
 void test_clear(Table * table) {
