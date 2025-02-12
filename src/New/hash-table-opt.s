@@ -321,27 +321,16 @@ ASM_hash:        # long ASM_hash(Table * table, char * word);
     testq %rax, %rax    # if (my_str_len(word) == 0)
     je hash_violation
 
+    movq %rax, %rcx   # long len = my_str_len(word)
+
     movq $1, %rdx   # long hashNum = 1
-
-    movq %r13, %rdi
-    xorq %rax, %rax
-
-    pushq %rdx      # push rdx 2x to ensure 16-byte alignment
-    pushq %rdx
-
-    call my_str_len
-
-    popq %rdx
-    popq %rdx
-
-    movq %rax, %rcx   # long len = my_str_len(word);
     movq $0, %r8     # long i = 0;
 
 while_hash:
     cmpq %r8, %rcx   # while (i < len)
     jle break_while_hash
 
-    movb (%r13), %r9b   # load the current character into a byte register
+    movb (%r13, %r8, 1), %r9b   # load the current character into a byte register
     movzbq %r9b, %r9    # extend to full quad word so quad operations can be used
 
     movq %rdx, %rax   # move hashNum into rax
@@ -352,7 +341,6 @@ while_hash:
     movq %rax, %rdx   # move the result back into hashNum
 
     incq %r8    # i++
-    incq %r13    # word++
     jmp while_hash
 
 break_while_hash:

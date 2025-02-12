@@ -48,12 +48,16 @@ Table * init(long maxWords) {
 }
 
 long hash(Table * table, char * word) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0)) {
+    if ((table == NULL) || (word == NULL)) {
+        return -1;
+    }
+
+    long len = my_str_len(word);
+    if (len == 0) {
         return -1;
     }
     
     long hashNum = 1;
-    long len = my_str_len(word);
 
     for (long i = 0; i < len; i++) {
         hashNum = ((hashNum << 5) - hashNum) + word[i];
