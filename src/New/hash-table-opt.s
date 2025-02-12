@@ -94,9 +94,6 @@ my_str_cmp:         # int my_str_cmp(char * s1, char * s2)
 while_my_str_cmp:
     movq (%rdx), %r8   # unsigned long c1 = *(unsigned long *)s1_tmp
     movq (%rcx), %r9   # unsigned long c2 = *(unsigned long *)s2_tmp
-    
-    BSWAP %r8       # by default in little endian so swap to get in big endian notation
-    BSWAP %r9
 
     cmpq %r8, %r9    # if the current 8 bytes of s1 == curr 8 bytes of s2
     je my_str_cmp_bytes_equal
@@ -646,9 +643,10 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     # it's fine that rdx is being overridden here because what was orig in rdx
     # i.e. long value has been moved to r13
 
-    movq %rax, %rdx   # Node *new = (Node *) malloc(sizeof(Node))
-    testq %rdx, %rdx   # if (new == NULL)
+    testq %rax, %rax   # if (new == NULL)
     je insert_err_node
+
+    movq %rax, %rdx   # Node *new = (Node *) malloc(sizeof(Node))
 
     movq $32, %rdi  # 32 bytes
     movq $1, %rsi   # sizeof(char)
@@ -712,9 +710,13 @@ insert_while:
 
    pushq %rdx
    pushq %rdx
+   pushq %rcx
+   pushq %rcx
 
    call my_str_cmp
 
+   popq %rcx
+   popq %rcx
    popq %rdx
    popq %rdx
 
