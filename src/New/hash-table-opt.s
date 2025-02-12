@@ -491,10 +491,10 @@ ASM_get:         # long ASM_get(Table * table, char * word)
     pushq %rbx
     pushq %rbx
 
-    cmpq $0x0, %rdi   # if (table == NULL)
+    testq %rdi, %rdi   # if (table == NULL)
     je get_violation
 
-    cmpq $0x0, %rsi    # if (word == NULL)
+    testq %rsi, %rsi    # if (word == NULL)
     je get_violation
 
     movq %rdi, %rbx   # store table in rbx
@@ -508,10 +508,11 @@ ASM_get:         # long ASM_get(Table * table, char * word)
     popq %rsi
     popq %rsi
 
-    cmpq $0, %rax     # if (my_str_len(word) == 0)
+    testq %rax, %rax     # if (my_str_len(word) == 0)
     je get_violation
 
     movq %rbx, %rdi   # move table into rdi for ASM_hash call
+
     pushq %rsi
     pushq %rsi
 
@@ -524,12 +525,10 @@ ASM_get:         # long ASM_get(Table * table, char * word)
 
     movq %rax, %rdx   # long targetIdx = ASM_hash(table, word);
 
-    imulq $8, %rdx
-    addq 24(%rbx), %rdx
-    movq (%rdx), %rdx    # Node * head = table->array[targetIdx]
+    movq 24(%rbx, %rdx, 8), %rdx # Node * head = table->array[targetIdx]
 
 while_get:
-    cmpq $0x0, %rdx    # while (head != NULL)
+    testq %rdx, %rdx    # while (head != NULL)
     je get_violation
 
     xorq %rax, %rax
@@ -549,7 +548,7 @@ while_get:
     popq %rsi
     popq %rsi
 
-    cmpq $0, %rax   # if (my_str_cmp(head->word, word) == 0)
+    testq %rax, %rax   # if (my_str_cmp(head->word, word) == 0)
     je found_key
 
     movq 16(%rdx), %rdx  # head = head->next
@@ -564,6 +563,9 @@ get_violation:
     jmp finish_get
 
 finish_get:
+    popq %rbx
+    popq %rbx
+    
     leave
     ret
 
