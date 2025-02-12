@@ -32,6 +32,22 @@ void test_delete(Table * table);
 void test_get(Table * table);
 
 void test_clear(Table * table);
+void print_bucket(Table *, long);
+
+// debugging utility that prints nodes only in a given bucket
+void print_bucket(Table * t, long idx) {
+    assert(idx >= 0 && idx <= t->nBuckets - 1);
+
+    Node * head = t->array[idx];
+    while (head) {
+      if (head->next != NULL) {
+        printf("Node(Key=%s, Value=%ld)->", head->word, head->value);
+      } else {
+        printf("Node(Key=%s, Value=%ld)\n", head->word, head->value);
+      }
+      head = head->next;
+    }
+}
 
 int main(int argc, char **argv) {
    printf("Running table init tests...\n");
@@ -66,6 +82,12 @@ int main(int argc, char **argv) {
    printf("Running table get tests...\n");
    test_get(table);
    printf("Table get tests passed...\n\n");
+
+   printf("HashTable before running delete tests using ASM_print\n");
+   ASM_print(table);
+   printf("\n\n");
+
+   print(table);
 
    printf("Running table delete tests...\n");
    test_delete(table);
@@ -182,6 +204,10 @@ void test_insert(Table * table) {
     char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(curr);
     my_str_cpy(curr, keys[i]);
+
+    if (!strcmp(curr, "nest") || !strcmp(curr, "fish")) {
+      printf("Bucket index where both are inserted: %ld\n", ASM_hash(table, curr));
+    }
 
     bool insertCurr = ASM_insert(table, curr, vals[i]);
     assert(insertCurr);
@@ -388,9 +414,18 @@ void test_delete(Table * table) {
    my_str_cpy(w6, "Rampage");
 
   long idxOne = ASM_hash(table, w1);
+  printf("Index where %s is located: %ld\n", w1, idxOne);
+
+  printf("Nodes in bucket index %ld  before deletion\n", idxOne);
+  print_bucket(table, idxOne);
+
   bool deleteOne = ASM_delete(table, w1);
   assert(deleteOne);
   assert(table->nWords == 16);
+
+  printf("Nodes in bucket index %ld after deletion\n", idxOne);
+  print_bucket(table, idxOne);
+
   assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
 
   // delete only node in a bucket
