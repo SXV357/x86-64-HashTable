@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <string.h>
-#include "hash-table.h"
+#include "../hash-table.h"
 
 #define MAX_WORDS (12308)
 #define N_TRIALS (1000)

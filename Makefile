@@ -3,7 +3,7 @@ CFLAGS = -g -Wall
 ASM_FLAGS = $(CFLAGS) -static # specifically for compiling ASM files
 
 # Executables
-all: c-old-test asm-old-test c-opt-test asm-opt-test
+all: c-old-test asm-old-test c-opt-test asm-opt-test old-benchmark new-benchmark
 
 # C implementation(old)
 c-old-test: src/Old/hash-table-old.c tests/Old/hash-table-c-test-old.c
@@ -20,6 +20,16 @@ c-opt-test: src/New/hash-table-opt.c src/str.c tests/New/hash-table-c-test-opt.c
 # x86 implementation(new)
 asm-opt-test: src/New/hash-table-opt.s src/New/hash-table-opt.c src/str.c tests/New/hash-table-asm-test-opt.c
 	$(CC) $(ASM_FLAGS) src/New/hash-table-opt.s src/New/hash-table-opt.c src/str.c tests/New/hash-table-asm-test-opt.c -o asm-opt-test
+
+# Benchmark executables
+
+# Old x86 implementation benchmark
+old-benchmark: src/Old/hash-table-old.s  src/Benchmarks/hash-table-benchmark-old.c
+	$(CC) $(ASM_FLAGS) src/Old/hash-table-old.s src/Benchmarks/hash-table-benchmark-old.c -o old-benchmark
+
+# Optimized x86 implementation benchmark
+new-benchmark: src/New/hash-table-opt.s  src/str.c src/Benchmarks/hash-table-benchmark-opt.c
+	$(CC) $(ASM_FLAGS) src/New/hash-table-opt.s  src/str.c src/Benchmarks/hash-table-benchmark-opt.c -o new-benchmark
 
 clean:
 	rm -f c-old-test asm-old-test c-opt-test asm-opt-test
