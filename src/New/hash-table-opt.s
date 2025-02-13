@@ -827,10 +827,6 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
 
     movq 24(%rdi, %rdx, 8), %r9 # Node * head = table->array[targetIdx]
 
-    movq %rdx, %r10
-    imulq $8, %r10
-    addq 24(%rdi), %r10  # address of table->array[targetIdx]
-
     movq $0x0, %rcx    # Node * prev = NULL;
     movq $0, %r8       # bool found = false;
 
@@ -847,16 +843,16 @@ while_delete:
     pushq %rdx
     pushq %rdx
     pushq %rcx
+    pushq %rcx
     pushq %r8
     pushq %r9
-    pushq %r10
 
     xorq %rax, %rax
     call my_str_cmp
 
-    popq %r10
     popq %r9
     popq %r8
+    popq %rcx
     popq %rcx
     popq %rdx
     popq %rdx
@@ -882,7 +878,7 @@ delete_match_found:
 
 delete_prev_null:
    movq 16(%r9), %rax
-   movq %rax, (%r10)   # table->array[targetIdx] = head->next;
+   movq %rax, 24(%rbx, %rdx, 8)   # table->array[targetIdx] = head->next;
 
    jmp delete_temp
 
