@@ -263,7 +263,7 @@ void print(Table * table) {
             Node * head = table->array[i];
 
             if (head != NULL) {
-                printf("Bucket %d\n", (i + 1));
+                printf("Bucket index %d\n", i);
 
                 while (head != NULL) {
                     if (head->next != NULL) {

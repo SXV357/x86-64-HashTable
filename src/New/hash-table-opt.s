@@ -20,7 +20,7 @@ insertErrWord:
     .string "(insert) error allocating memory for the word field"
 
 bucketNumber:
-    .string "Bucket %ld\n"
+    .string "Bucket index %ld\n"
 
 nodeFormatOne:
     .string "Node(Key=%s, Value=%ld)->"
@@ -929,10 +929,10 @@ ASM_update:       # bool ASM_update(Table * table, char * word, long value);
     pushq %r12
     pushq %r13
 
-    cmpq $0x0, %rdi   # if (table == NULL)
+    testq %rdi, %rdi   # if (table == NULL)
     je update_violation
 
-    cmpq $0x0, %rsi   # if (word == NULL)
+    testq %rsi, %rsi   # if (word == NULL)
     je update_violation
 
     movq %rdi, %r10  # temporarily store table in r10
@@ -950,10 +950,10 @@ ASM_update:       # bool ASM_update(Table * table, char * word, long value);
     popq %rsi
     popq %r10
 
-    cmpq $0, %rax    # if (my_str_len(word) == 0)
+    testq %rax, %rax    # if (my_str_len(word) == 0)
     je update_violation
 
-    cmpq $0, %rdx     # if (value < 0)
+    testq %rdx, %rdx     # if (value < 0)
     jl update_violation
 
     movq %r10, %rdi   # move table back into rdi
@@ -971,18 +971,15 @@ ASM_update:       # bool ASM_update(Table * table, char * word, long value);
     popq %rsi
     popq %rdi
 
-    imulq $8, %rax
-    addq 24(%rdi), %rax
-
-    movq %rax, %rcx      # rcx holds address of the pointer to the node
-    movq (%rax), %r8     # Node * elem = table->array[hashNum]
+    movq %rax, %rcx      # long hashNum = hash(table, word)
+    movq 24(%rdi, %rcx, 8), %r8     # Node * elem = table->array[hashNum]
 
     movq %rdi, %rbx     # rbx = table
     movq %rsi, %r12     # r12 = char * word
     movq %rdx, %r13     # r13 = long value
 
 while_update:
-    cmpq $0x0, %r8     # while (elem != NULL)
+    testq %r8, %r8     # while (elem != NULL)
     je break_while_update
 
     movq (%r8), %rdi   # (%r8) contains addr to elem->word
@@ -997,7 +994,7 @@ while_update:
     popq %r8
     popq %rcx
 
-    cmpq $0, %rax     # if my_str_cmp(elem->word, word) == 0
+    testq %rax, %rax     # if my_str_cmp(elem->word, word) == 0
     je update_match_found
 
     cmpq $0x0, 16(%r8)   # else if (elem->next == NULL)
@@ -1023,16 +1020,17 @@ break_while_update:
 
     xorq %rax, %rax
 
-    call malloc      # Node * e = (Node *) malloc(sizeof(Node))
+    call malloc      
 
     popq %r8
     popq %rcx
 
-    cmpq $0x0, %rax   # if (e == NULL)
+    movq %rax, %r9   # Node * e = (Node *) malloc(sizeof(Node))
+
+    testq %r9, %r9   # if (e == NULL)
     je update_violation
 
     movq %r12, %rdi
-    movq %rax, %r9   # Node * e = (Node *) malloc(sizeof(Node))
 
     pushq %rcx
     pushq %r8
@@ -1051,18 +1049,18 @@ break_while_update:
     movq %r13, 8(%r9)  # e->value = value;
     movq $0x0, 16(%r9)  # e->next = NULL;
 
-    cmpq $0x0, %r8    # if (elem == NULL)
+    testq %r8, %r8    # if (elem == NULL)
     je update_empty_list
 
     movq %r9, 16(%r8)  # elem->next = e
     jmp update_end
 
 update_empty_list:
-    movq %r9, (%rcx)   # table->array[hashNum] = e;
+    movq %r9, 24(%rbx, %rcx, 8)   # table->array[hashNum] = e;
     jmp update_end
 
 update_end:
-    addq $1, 8(%rbx)    # table->nWords++;
+    incq 8(%rbx)    # table->nWords++;
     jmp update_violation
 
 update_violation:
@@ -1086,7 +1084,7 @@ ASM_print:        # void ASM_print(Table * table)
     pushq %rbx
     pushq %rbx
 
-    cmpq $0x0, %rdi   # if (table != NULL)
+    testq %rdi, %rdi   # if (table != NULL)
     je finish_print
 
     movq %rdi, %rbx    # store table in rbx
@@ -1099,17 +1097,20 @@ for_print:
     cmpq %r10, %r8      # while (i < table->nBuckets)
     jle finish_print
 
-    movq %r10, %rcx
-    imulq $8, %rcx
-    addq 24(%rbx), %rcx
-    movq (%rcx), %rcx    # Node * head = table->array[i];
+    movq 24(%rbx, %r10, 8), %rcx  # Node * head = table->array[i];
 
-    cmpq $0x0, %rcx     # if (head != NULL)
+    ; movq %r10, %rcx
+    ; imulq $8, %rcx
+    ; addq 24(%rbx), %rcx
+    ; movq (%rcx), %rcx    # Node * head = table->array[i];
+
+    testq %rcx, %rcx     # if (head != NULL)
     je continue_for_print
 
+    # we will print bucket index instead
     movq $bucketNumber, %rdi
     movq %r10, %rsi
-    addq $1, %rsi
+    ; addq $1, %rsi
 
     pushq %r8
     pushq %rcx
@@ -1117,7 +1118,7 @@ for_print:
     pushq %r10
 
     xorq %rax, %rax
-    call printf       # printf("Bucket %d\n", (i + 1));
+    call printf       # printf("Bucket index %ld\n", i);
 
     popq %r10
     popq %r10
@@ -1125,7 +1126,7 @@ for_print:
     popq %r8
 
 while_node_print:
-    cmpq $0x0, %rcx   # while (head != NULL)
+    testq %rcx, %rcx   # while (head != NULL)
     je continue_for_print
 
     cmpq $0x0, 16(%rcx)  # if (head->next != NULL)

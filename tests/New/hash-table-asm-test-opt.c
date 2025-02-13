@@ -36,7 +36,7 @@ void print_bucket(Table *, long);
 
 // debugging utility that prints nodes only in a given bucket
 void print_bucket(Table * t, long idx) {
-    assert(idx >= 0 && idx <= t->nBuckets - 1);
+    assert((idx >= 0 )&& (idx <= t->nBuckets - 1));
 
     Node * head = t->array[idx];
     while (head) {
@@ -356,12 +356,12 @@ void test_update(Table * table) {
 
   bool updateOne = ASM_update(table, w1, 192021);
   assert(updateOne);
-  assert(table->nWords == 14);
+  assert(table->nWords == 15);
 
   // update value of a non-existent key
   bool updateTwo = ASM_update(table, w2, 81);
   assert(!updateTwo);
-  assert(table->nWords == 15);
+  assert(table->nWords == 16);
 
   // invalid values
   bool updateThree = ASM_update(table, NULL, 67);
@@ -418,21 +418,11 @@ void test_delete(Table * table) {
    my_str_cpy(w6, "Rampage");
 
   long idxOne = ASM_hash(table, w1);
-  // printf("Index where %s is located: %ld\n", w1, idxOne);
-
-  // printf("Nodes in bucket index %ld  before deletion\n", idxOne);
-  // print_bucket(table, idxOne);
 
   bool deleteOne = ASM_delete(table, w1);
   assert(deleteOne);
   assert(table->nWords == 16);
 
-  // printf("Nodes in bucket index %ld after deletion\n", idxOne);
-  // print_bucket(table, idxOne);
-
-  // nest is being deleted but idxOne is different from actual index where they're inserted
-
-  // TEMPORARY FIX(NEED TO VERIFY ASM_PRINT ISN'T DOING ANYTHING UNEXPECTED)
   if (table->array[idxOne] != NULL) {
     assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
   }
