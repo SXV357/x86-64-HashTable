@@ -42,11 +42,11 @@ int main(int argc, char **argv) {
 
     printf("Hash Table initialized...\n\n");
 
-    char ** non_existent_words = load_non_existent_words();
-    char ** random_existent_words = get_random_existent_words(wordFp);
-
     // wordFp file pointer is opened as part of this ben
     long long insert_total_ns = benchmark_insert(table);
+
+    char ** non_existent_words = load_non_existent_words();
+    char ** random_existent_words = get_random_existent_words(wordFp);
 
     long long existent_lookup_total_ns = benchmark_lookup_and_delete(table, random_existent_words, ASM_lookup, true);
 
