@@ -18,15 +18,32 @@ FILE *wordFp; // FILE pointer for the 1000w.txt file
 
 // ASM functions that will be benchmarked
 extern Table * ASM_init(long maxWords);
+extern long ASM_hash(Table *, char *);
 extern bool ASM_insert(Table * table, char * word, long value);
 extern bool ASM_lookup(Table * table, char * word);
 extern bool ASM_delete(Table * table, char * word);
+extern void ASM_print(Table *);
 
 // forward function declarations
 char ** load_non_existent_words();
 char ** get_random_existent_words(FILE *);
 long long benchmark_insert(Table *);
 long long benchmark_lookup_and_delete(Table *, char **, bool (*)(Table *, char *), bool);
+void print_bucket(Table *, long);
+
+void print_bucket(Table * t, long idx) {
+  assert((idx >= 0) && (idx <= t->nBuckets - 1));
+
+  Node * head = t->array[idx];
+  while (head) {
+    if (head->next != NULL) {
+      printf("Node(Key=%s, Value=%ld)->", head->word, head->value);
+    } else {
+      printf("Node(Key=%s, Value=%ld)\n", head->word, head->value);
+    }
+    head = head->next;
+  }
+}
 
 int main(int argc, char **argv) {
     srand(time(NULL)); // seed random number generator
@@ -146,9 +163,28 @@ long long benchmark_insert(Table * table) {
       char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
       assert(curr);
       my_str_cpy(curr, buf);
+      long val = rand();
+      long idx = ASM_hash(table, curr);
+
+    //   printf("Expected bucket index where %s should be inserted: %ld\n", curr, ASM_hash(table, curr));
+      printf("Inserting pair(Key=%s, Value=%ld) at bucket index %ld\n", curr, val, idx);
+
+    //   if (!strcmp(curr, "plenty")) {
+    //     printf("plenty is being inserted with value %ld\n", val);
+    //     long targetIdx = ASM_hash(table, curr);
+    //     printf("Index for plenty: %ld\n", targetIdx);
+        
+    //     // Print bucket contents
+    //     Node* head = table->array[targetIdx];
+    //     while (head) {
+    //         printf("Node at %p: word=%s, value=%ld\n", 
+    //                (void*)head, head->word, head->value);
+    //         head = head->next;
+    //     }
+    // }
 
       clock_gettime(CLOCK_MONOTONIC, &start);
-      bool insertCurr = ASM_insert(table, curr, rand());
+      bool insertCurr = ASM_insert(table, curr, val);
       clock_gettime(CLOCK_MONOTONIC, &end);
 
       // get difference in seconds and multiply by 1000000000 to get nanoseconds and add nanosecond diff
@@ -156,6 +192,10 @@ long long benchmark_insert(Table * table) {
                             (end.tv_nsec - start.tv_nsec);
 
       assert(insertCurr);
+
+      printf("After inserting %s at bucket index %ld, contents of the bucket:\n\n", curr, idx);
+      print_bucket(table, idx);
+      printf("\n\n");
     }
 
     assert(table->nWords == N_TRIALS);
@@ -167,6 +207,13 @@ long long benchmark_lookup_and_delete(Table * table, char ** words,
   long long total_ns = 0;
 
   for (int i = 0; i < N_NON_EXISTENT; i++) {
+    if (asm_func == ASM_delete && existent) {
+      long idx = ASM_hash(table, words[i]);
+      printf("We expect %s to be present in the hash table at bucket index %ld and we want to delete it\n\n", words[i], idx);
+      printf("Contents of bucket %ld before deleting %s:\n\n", idx, words[i]);
+      print_bucket(table, idx);
+      printf("\n\n");
+    }
     clock_gettime(CLOCK_MONOTONIC, &start);
     bool curr = (*asm_func)(table, words[i]);
     clock_gettime(CLOCK_MONOTONIC, &end);

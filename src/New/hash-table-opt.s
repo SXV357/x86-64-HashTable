@@ -118,7 +118,7 @@ my_str_cmp_smaller:
     jmp finish_my_str_cmp
 
 my_str_cmp_greater:
-    movq $1, %rax       # return -1
+    movq $1, %rax       # return 1
     jmp finish_my_str_cmp
 
 finish_my_str_cmp:
@@ -403,7 +403,9 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     movq %rax, %rdx    # long hashNum = hash(table, word)
 
     movq $0x0, %r10    # Node * prev = NULL
-    movq 24(%r12, %rdx, 8), %r8  # Node * elem = table->array[hashNum]
+
+    movq 24(%r12), %r8
+    movq (%r8, %rdx, 8), %r8  # Node * elem = table->array[hashNum]
 
     movq %rdx, %r13
     imulq $8, %r13     # offset of 24
@@ -513,7 +515,8 @@ ASM_get:         # long ASM_get(Table * table, char * word)
 
     movq %rax, %rdx   # long targetIdx = ASM_hash(table, word);
 
-    movq 24(%rbx, %rdx, 8), %rdx # Node * head = table->array[targetIdx]
+    movq 24(%rbx), %rax
+    movq (%rax, %rdx, 8), %rdx # Node * head = table->array[targetIdx]
 
 while_get:
     testq %rdx, %rdx    # while (head != NULL)
@@ -682,7 +685,8 @@ ASM_insert:        # bool ASM_insert(Table * table, char * word, long value)
     movq %r13, 8(%rdx)  # new->value = value;
     movq $0x0, 16(%rdx) # new->next = NULL;
 
-    movq 24(%rbx, %rcx, 8), %rax  # Node * head = table->array[targetIdx]
+    movq 24(%rbx), %rax
+    movq (%rax, %rcx, 8), %rax  # Node * head = table->array[targetIdx]
 
     testq %rax, %rax    # if (head == NULL)
     je insert_list_empty
@@ -739,7 +743,8 @@ insert_list_empty:
     # but just does so in place and won't update the actual list
    # doing movq %rdx, (%rcx) will throw seg fault since %rcx is alr 0x0
 
-   movq %rdx, 24(%rbx, %rcx, 8)   # table->array[targetIdx] = new;
+   movq 24(%rbx), %rax
+   movq %rdx, (%rax, %rcx, 8)   # table->array[targetIdx] = new;
    jmp insert_done
 
 insert_err_word:
@@ -825,7 +830,8 @@ ASM_delete:        # bool ASM_delete(Table * table, char * word)
 
     movq %rax, %rdx   # long targetIdx = ASM_hash(table, word)
 
-    movq 24(%rdi, %rdx, 8), %r9 # Node * head = table->array[targetIdx]
+    movq 24(%rdi), %r9
+    movq (%r9, %rdx, 8), %r9 # Node * head = table->array[targetIdx]
 
     movq $0x0, %rcx    # Node * prev = NULL;
     movq $0, %r8       # bool found = false;
@@ -877,8 +883,10 @@ delete_match_found:
    jmp delete_temp
 
 delete_prev_null:
-   movq 16(%r9), %rax
-   movq %rax, 24(%rbx, %rdx, 8)   # table->array[targetIdx] = head->next;
+   movq 16(%r9), %rax   # move head->next into rax
+
+   movq 24(%rbx), %r10
+   movq %rax, (%r10, %rdx, 8)   # table->array[targetIdx] = head->next;
 
    jmp delete_temp
 
@@ -972,7 +980,9 @@ ASM_update:       # bool ASM_update(Table * table, char * word, long value);
     popq %rdi
 
     movq %rax, %rcx      # long hashNum = hash(table, word)
-    movq 24(%rdi, %rcx, 8), %r8     # Node * elem = table->array[hashNum]
+
+    movq 24(%rdi), %r8
+    movq (%r8, %rcx, 8), %r8     # Node * elem = table->array[hashNum]
 
     movq %rdi, %rbx     # rbx = table
     movq %rsi, %r12     # r12 = char * word
@@ -1056,7 +1066,8 @@ break_while_update:
     jmp update_end
 
 update_empty_list:
-    movq %r9, 24(%rbx, %rcx, 8)   # table->array[hashNum] = e;
+    movq 24(%rbx), %rax
+    movq %r9, (%rax, %rcx, 8)   # table->array[hashNum] = e;
     jmp update_end
 
 update_end:
@@ -1097,12 +1108,8 @@ for_print:
     cmpq %r10, %r8      # while (i < table->nBuckets)
     jle finish_print
 
-    movq 24(%rbx, %r10, 8), %rcx  # Node * head = table->array[i];
-
-    ; movq %r10, %rcx
-    ; imulq $8, %rcx
-    ; addq 24(%rbx), %rcx
-    ; movq (%rcx), %rcx    # Node * head = table->array[i];
+    movq 24(%rbx), %rcx
+    movq (%rcx, %r10, 8), %rcx  # Node * head = table->array[i];
 
     testq %rcx, %rcx     # if (head != NULL)
     je continue_for_print
@@ -1110,7 +1117,6 @@ for_print:
     # we will print bucket index instead
     movq $bucketNumber, %rdi
     movq %r10, %rsi
-    ; addq $1, %rsi
 
     pushq %r8
     pushq %rcx
