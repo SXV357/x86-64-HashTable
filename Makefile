@@ -32,4 +32,4 @@ new-benchmark: src/New/hash-table-opt.s  src/str.c src/Benchmarks/hash-table-ben
 	$(CC) $(ASM_FLAGS) src/New/hash-table-opt.s  src/str.c src/Benchmarks/hash-table-benchmark-opt.c -o new-benchmark
 
 clean:
-	rm -f c-old-test asm-old-test c-opt-test asm-opt-test
+	rm -f c-old-test asm-old-test c-opt-test asm-opt-test old-benchmark new-benchmark
