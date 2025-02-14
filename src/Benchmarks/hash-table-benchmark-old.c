@@ -67,7 +67,7 @@ char ** load_non_existent_words() {
   char ** non_existent = malloc(sizeof(char *) * N_NON_EXISTENT);
   assert(non_existent);
 
-  FILE *neFp = fopen("non-existent.txt", "r");
+  FILE *neFp = fopen("src/Words/non-existent.txt", "r");
   assert(neFp);
 
   int i = 0;
@@ -130,7 +130,7 @@ char ** get_random_existent_words(FILE * fp) {
 }
 
 void benchmark_insert(Table * table) {
-    wordFp = fopen("1000w.txt", "r");
+    wordFp = fopen("src/Words/1000w.txt", "r");
     assert(wordFp != NULL);
 
     // nanoseconds can get quite large and cause potential overflow for long so use long long as safety measure
