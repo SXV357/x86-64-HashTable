@@ -27,28 +27,6 @@ int my_str_len(char *s) {
     return len;
 }
 
-int my_str_cmp_old(char * s1, char * s2) {
-    char *s1_tmp = s1;
-    char *s2_tmp = s2;
-    
-    while ((*s1_tmp != '\0') && (*s2_tmp != '\0')) {
-        if (*s1_tmp < *s2_tmp) {
-            return -1;
-        } else if (*s1_tmp > *s2_tmp) {
-            return 1;
-        }
-
-        s1_tmp++;
-        s2_tmp++;
-    }
-    
-    if ((*s1_tmp == '\0') && (*s2_tmp == '\0')) {
-        return 0;
-    }
-
-    return *s1 == '\0' ? -1 : 1;
-}
-
 int my_str_cmp_opt(char * s1, char * s2) {
     // both strings are 32 bytes long(padded with 0's as well)
     char *s1_tmp = s1;
