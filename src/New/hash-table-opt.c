@@ -77,10 +77,10 @@ bool lookup(Table * table, char * word) {
     long hashNum = hash(table, word);
 
     Node * prev = NULL; // track prev pointer
-    Node ** head = &(table->array[hashNum]); // maintain this for head insertion later
     Node * elem = table->array[hashNum];
 
     while (elem) {
+        // the element was found
         if (!my_str_cmp_opt(elem->word, word)) {
             break;
         }
@@ -93,17 +93,15 @@ bool lookup(Table * table, char * word) {
         return false;
     }
 
-    // if prev = NULL, it means the node was already at the head of the list so no need to delete and re-insert
+    // we found the element
+    // if prev == NULL, it was found at the head so no need to delete and re-insert
     if (prev != NULL) {
-        // means the node found was in the middle or end of the list so need to delete and re-insert at head
-
         // deleting elem
         prev->next = elem->next;
 
-        // re-insert at head
-            // we want to make sure this node already isn't at the head of the list
-        elem->next = *head;
-        *head = elem;
+        // re-inserting at the head
+        elem->next = table->array[hashNum]; // node->next = head
+        table->array[hashNum] = elem; // head = node
     }
 
     return true;

@@ -32,22 +32,6 @@ void test_delete(Table * table);
 void test_get(Table * table);
 
 void test_clear(Table * table);
-void print_bucket(Table *, long);
-
-// debugging utility that prints nodes only in a given bucket
-void print_bucket(Table * t, long idx) {
-    assert((idx >= 0 )&& (idx <= t->nBuckets - 1));
-
-    Node * head = t->array[idx];
-    while (head) {
-      if (head->next != NULL) {
-        printf("Node(Key=%s, Value=%ld)->", head->word, head->value);
-      } else {
-        printf("Node(Key=%s, Value=%ld)\n", head->word, head->value);
-      }
-      head = head->next;
-    }
-}
 
 int main(int argc, char **argv) {
    printf("Running table init tests...\n");
@@ -83,17 +67,9 @@ int main(int argc, char **argv) {
    test_get(table);
    printf("Table get tests passed...\n\n");
 
-   printf("HashTable before running delete tests using ASM_print\n");
-   ASM_print(table);
-   printf("\n\n");
-
    printf("Running table delete tests...\n");
    test_delete(table);
    printf("Table delete tests passed...\n\n");
-
-   printf("HashTable after running delete tests using ASM_print\n");
-   ASM_print(table);
-   printf("\n\n");
 
    printf("Running table update tests...\n");
    test_update(table);
@@ -206,12 +182,6 @@ void test_insert(Table * table) {
     char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(curr);
     my_str_cpy(curr, keys[i]);
-
-    if (!strcmp(curr, "nest") || !strcmp(curr, "fish")) {
-      printf("Bucket index where both are inserted: %ld\n", ASM_hash(table, curr));
-    }
-
-    // within ASM_insert check what index is being used for insertion(add print internally)
 
     bool insertCurr = ASM_insert(table, curr, vals[i]);
     assert(insertCurr);
@@ -374,7 +344,6 @@ void test_update(Table * table) {
   assert(!updateCurr);
 
   // test NULL table and empty string
-
   bool updateFive = ASM_update(table, w5, 68);
   bool updateSix = ASM_update(table, w5, -76);
   bool updateSeven = ASM_update(table, NULL, -43);
@@ -422,10 +391,7 @@ void test_delete(Table * table) {
   bool deleteOne = ASM_delete(table, w1);
   assert(deleteOne);
   assert(table->nWords == 16);
-
-  if (table->array[idxOne] != NULL) {
-    assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
-  }
+  assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
 
   // delete only node in a bucket
   long idxThree = ASM_hash(table, w3);

@@ -383,7 +383,7 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     je lookup_violation
 
     movq %rsi, %rbx    # rbx = char * word
-    movq %rdi, %r12
+    movq %rdi, %r12    # r12 = Table * table
 
     movq %rbx, %rdi
     xorq %rax, %rax
@@ -393,23 +393,17 @@ ASM_lookup:       # bool ASM_lookup(Table * table, char * word);
     testq %rax, %rax       # if (my_str_len(word) == 0)
     je lookup_violation
 
-    xorq %rax, %rax
-
     movq %r12, %rdi
     movq %rbx, %rsi
 
+    xorq %rax, %rax
     call ASM_hash
 
     movq %rax, %rdx    # long hashNum = hash(table, word)
-
     movq $0x0, %r10    # Node * prev = NULL
 
     movq 24(%r12), %r8
     movq (%r8, %rdx, 8), %r8  # Node * elem = table->array[hashNum]
-
-    movq %rdx, %r13
-    imulq $8, %r13     # offset of 24
-    addq 24(%r12), %r13   # Node ** head = &(table->array[hashNum])
 
 while_lookup:
     testq %r8, %r8     # while (elem != NULL)
@@ -420,6 +414,8 @@ while_lookup:
 
     xorq %rax, %rax
 
+    pushq %rdx
+    pushq %rdx
     pushq %r8
     pushq %r8
     pushq %r10
@@ -431,6 +427,8 @@ while_lookup:
     popq %r10
     popq %r8
     popq %r8
+    popq %rdx
+    popq %rdx
 
     testq %rax, %rax       # if my_str_cmp(elem->word, word) != 0
     je break_while_lookup
@@ -446,12 +444,17 @@ break_while_lookup:
     testq %r10, %r10    # if (prev != NULL)
     je lookup_success
 
+    # deleting the element
     movq 16(%r8), %rax  # move elem->next into rax
     movq %rax, 16(%r10)  # prev->next = elem->next
 
-    movq (%r13), %rax
-    movq %rax, 16(%r8)  # elem->next = *head
-    movq %r8, %rax      # *head = elem
+    # re-inserting at head
+    movq 24(%r12), %rax
+    movq (%rax, %rdx, 8), %r9   # store current head
+
+    movq %r9, 16(%r8)    # elem->next = table->array[hashNum]
+    movq %r8, (%rax, %rdx, 8)  # table->array[hashNum] = elem
+    
     jmp lookup_success
 
 lookup_success:
