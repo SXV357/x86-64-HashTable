@@ -44,6 +44,10 @@ int main(int argc, char **argv) {
     test_insert(table);
     printf("Table insertion tests passed...\n\n");
 
+    printf("Table before executing lookup tests:\n");
+    print(table);
+    printf("\n\n");
+
     printf("Running table lookup tests...\n");
     test_lookup(table);
     printf("Table lookup tests passed...\n\n");
@@ -204,7 +208,7 @@ void test_insert(Table * table) {
 
 void test_lookup(Table * table) {
     // existent key
-    char *w1, *w2, *w3;
+    char *w1, *w2, *w3, *w4, *w5;
 
     w1 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w1);
@@ -218,6 +222,15 @@ void test_lookup(Table * table) {
     assert(w3);
     my_str_cpy(w3, "");
 
+    w4 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w4);
+    my_str_cpy(w4, "nest");
+
+    w5 = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(w5);
+    my_str_cpy(w5, "fish");
+
+    // existent key(only node in the bucket)
     bool lookupOne = lookup(table, w1);
     assert(lookupOne);
 
@@ -232,7 +245,14 @@ void test_lookup(Table * table) {
     bool lookupSix = lookup(NULL, w2);
     bool lookupSeven = lookup(NULL, NULL);
 
-    // TO DO: tests for checking if after a successful lookup, that element is moved to front of chain
+    // test to check if after a successful lookup the element is moved to the front of chain
+    long idx = hash(table, w4);
+    bool lookupEight = lookup(table, w4);
+    assert(lookupEight);
+    
+    assert(!my_str_cmp_opt(table->array[idx]->word, w4));
+    assert(!my_str_cmp_opt(table->array[idx]->next->word, w5));
+    assert(table->array[idx]->next->next == NULL);
 
     assert((!lookupThree) && (!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
 }
