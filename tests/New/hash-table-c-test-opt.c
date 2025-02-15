@@ -44,10 +44,6 @@ int main(int argc, char **argv) {
     test_insert(table);
     printf("Table insertion tests passed...\n\n");
 
-    printf("Table before executing lookup tests:\n");
-    print(table);
-    printf("\n\n");
-
     printf("Running table lookup tests...\n");
     test_lookup(table);
     printf("Table lookup tests passed...\n\n");
