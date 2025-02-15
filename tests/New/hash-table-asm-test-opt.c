@@ -215,7 +215,7 @@ void test_insert(Table * table) {
 
 void test_lookup(Table * table) {
    // existent key
-   char *w1, *w2, *w3;
+   char *w1, *w2, *w3, *w4, *w5;
 
    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w1);
@@ -228,6 +228,14 @@ void test_lookup(Table * table) {
    w3 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w3);
    my_str_cpy(w3, "");
+
+   w4 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w4);
+   my_str_cpy(w4, "nest");
+
+   w5 = calloc(MAX_KEY_SIZE, sizeof(char));
+   assert(w5);
+   my_str_cpy(w5, "fish");
 
    bool lookupOne = ASM_lookup(table, w1);
    assert(lookupOne);
@@ -246,7 +254,14 @@ void test_lookup(Table * table) {
    bool lookupSix = ASM_lookup(NULL, w3);
    bool lookupSeven = ASM_lookup(table, w3);
 
-   // TO DO: test where after a successful lookup, the node is moved to front of chain
+   // test where after a successful lookup, the node is moved to front of chain
+   long idx = ASM_hash(table, w4);
+   bool lookupEight = lookup(table, w4);
+   assert(lookupEight);
+
+   assert(!my_str_cmp_opt(table->array[idx]->word, w4));
+   assert(!my_str_cmp_opt(table->array[idx]->next->word, w5));
+   assert(table->array[idx]->next->next == NULL);
 
    assert((!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
 }
