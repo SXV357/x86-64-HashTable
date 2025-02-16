@@ -3,7 +3,7 @@ CFLAGS = -g -Wall
 ASM_FLAGS = $(CFLAGS) -static # specifically for compiling ASM files
 
 # Executables
-all: c-old-test asm-old-test c-opt-test asm-opt-test old-benchmark new-benchmark
+all: c-old-test asm-old-test c-opt-test asm-opt-test old-benchmark new-benchmark runall
 
 # C implementation(old)
 c-old-test: src/Old/hash-table-old.c tests/Old/hash-table-c-test-old.c
@@ -30,6 +30,10 @@ old-benchmark: src/Old/hash-table-old.s  src/Benchmarks/hash-table-benchmark-old
 # Optimized x86 implementation benchmark
 new-benchmark: src/New/hash-table-opt.s  src/Utils/str.c src/Benchmarks/hash-table-benchmark-opt.c
 	$(CC) $(ASM_FLAGS) src/New/hash-table-opt.s  src/Utils/str.c src/Benchmarks/hash-table-benchmark-opt.c -o new-benchmark
+
+# executable to run all tests
+runall: src/runall.c
+	$(CC) $(C_FLAGS) src/runall.c -o runall
 
 clean:
 	rm -f c-old-test asm-old-test c-opt-test asm-opt-test old-benchmark new-benchmark

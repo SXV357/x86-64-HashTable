@@ -3,7 +3,6 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../../src/hash-table.h"
 #include "../../src/Utils/str.h"
 #include "../tests.h"
 

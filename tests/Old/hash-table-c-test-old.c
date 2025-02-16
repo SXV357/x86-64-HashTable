@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "../../src/hash-table.h"
 #include "../tests.h"
 
 // For testing the old C implementation
@@ -54,7 +53,7 @@ int main(int argc, char **argv) {
 
     printf("Running table clear tests...\n");
     test_clear(table);
-    printf("Table clear tests passed...\n\n");
+    printf("Table clear tests passed...\n");
 
     return 0;
 }
@@ -278,7 +277,7 @@ void test_delete(Table * table) {
 
 void test_clear(Table * table) {
     // NULL table
-    bool clearOne = ASM_clear(NULL);
+    bool clearOne = clear(NULL);
     assert(!clearOne);
 
     bool clearTwo = clear(table);

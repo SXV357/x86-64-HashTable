@@ -3,7 +3,6 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../../src/hash-table.h"
 #include "../tests.h"
 
 // For testing the old x86 implementation

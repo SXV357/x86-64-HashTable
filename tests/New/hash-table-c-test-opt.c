@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "../../src/hash-table.h"
 #include "../../src/Utils/str.h"
 #include "../tests.h"
 
@@ -55,7 +54,7 @@ int main(int argc, char **argv) {
 
     printf("Running table clear tests...\n");
     test_clear(table);
-    printf("Table clear tests passed...\n\n");
+    printf("Table clear tests passed...\n");
 
     return 0;
 }
