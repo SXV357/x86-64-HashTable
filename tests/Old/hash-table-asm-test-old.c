@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "../../src/hash-table.h"
+#include "./tests.h"
 
 // For testing the old x86 implementation
 
@@ -17,20 +18,7 @@ extern bool ASM_insert(Table * table, char * word, long value);
 extern bool ASM_delete(Table * table, char * word);
 extern bool ASM_update(Table * table, char * word, long value);
 
-extern void ASM_print(Table * table);
 extern bool ASM_clear(Table * table);
-
-// function forward declarations
-void test_hash(Table * table);
-void test_init();
-
-void test_lookup(Table * table);
-void test_insert(Table * table);
-void test_update(Table * table);
-void test_delete(Table * table);
-void test_get(Table * table);
-
-void test_clear(Table * table);
 
 int main(int argc, char **argv) {
    printf("Running table init tests...\n");
@@ -38,15 +26,16 @@ int main(int argc, char **argv) {
    printf("Table init tests passed...\n\n");
 
    printf("Running actual table initialization test...\n");
-   long maxWords = 256;
-   Table * table = ASM_init(maxWords);
+
+   Table * table = ASM_init(MAX_WORDS_OLD);
    assert(table);
-   assert(table->maxWords == maxWords);
-   assert(table->nBuckets == maxWords + 1);
+   assert(table->maxWords == MAX_WORDS_OLD);
+   assert(table->nBuckets == MAX_WORDS_OLD + 1);
    assert(table->array);
    for (int i = 0; i < table->nBuckets; i++) {
       assert(table->array[i] == NULL);
    }
+
    printf("Actual table initialization test passed...\n\n");
 
    printf("Running table hash tests...\n");
@@ -109,21 +98,21 @@ void test_init() {
 }
 
 void test_hash(Table * table) {
-  // test for a valid character
-  char *word = "hello";
-  long cHashVal = hash(table, word);
-  long asmHashVal = ASM_hash(table, word);
+   // test for valid characters
+   char *words[] = {"hello", "bye", "see", "flag"};
 
-  assert(cHashVal == asmHashVal);
+   for (int i = 0; i < 4; i++) {
+      assert(hash(table, words[i]) == ASM_hash(table, words[i]));
+   }
 
-  // test for invalid word argument
-  assert(ASM_hash(table, NULL) == -1);
-  assert(ASM_hash(table, "") == -1);
+   // test for invalid word argument
+   assert(ASM_hash(table, NULL) == -1);
+   assert(ASM_hash(table, "") == -1);
 
-  // test for NULL table
-  assert(ASM_hash(NULL, "something") == -1);
-  assert(ASM_hash(NULL, "") == -1);
-  assert(ASM_hash(NULL, NULL) == -1);
+   // test for NULL table
+   assert(ASM_hash(NULL, "something") == -1);
+   assert(ASM_hash(NULL, "") == -1);
+   assert(ASM_hash(NULL, NULL) == -1);
 }
 
 void test_insert(Table * table) {
