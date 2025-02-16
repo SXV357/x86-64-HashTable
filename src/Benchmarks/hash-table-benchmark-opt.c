@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <string.h>
 #include "../hash-table.h"
-#include "../str.h"
+#include "../Utils/str.h"
 #include "./benchmark.h"
 
 struct timespec start, end; // for measuring time

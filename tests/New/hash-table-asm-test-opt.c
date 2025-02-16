@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "../../src/hash-table.h"
-#include "../../src/str.h"
+#include "../../src/Utils/str.h"
 #include "../tests.h"
 
 // For testing the new x86 implementation

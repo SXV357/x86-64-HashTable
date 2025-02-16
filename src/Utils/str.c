@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "str.h"
+#include "./str.h"
 
 void my_str_cpy(char * dest, char * src) {
     int i = 0;
