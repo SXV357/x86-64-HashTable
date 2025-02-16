@@ -6,38 +6,25 @@
 #include <string.h>
 #include "../hash-table.h"
 #include "../str.h"
-
-#define MAX_WORDS (12288)
-#define N_TRIALS (1000)
-#define N_NON_EXISTENT (500)
-#define BILLION (1.0E9)
-#define BILLION_LL (1000000000LL)
+#include "./benchmark.h"
 
 struct timespec start, end; // for measuring time
 FILE *wordFp; // FILE pointer for the 1000w.txt file
 
 // ASM functions that will be benchmarked
 extern Table * ASM_init(long maxWords);
-extern long ASM_hash(Table *, char *);
 extern bool ASM_insert(Table * table, char * word, long value);
 extern bool ASM_lookup(Table * table, char * word);
 extern bool ASM_delete(Table * table, char * word);
-extern void ASM_print(Table *);
-
-// forward function declarations
-char ** load_non_existent_words();
-char ** get_random_existent_words(FILE *);
-long long benchmark_insert(Table *);
-long long benchmark_lookup_and_delete(Table *, char **, bool (*)(Table *, char *), bool);
 
 int main(int argc, char **argv) {
     srand(time(NULL)); // seed random number generator
 
     printf("Initializing hash table...\n");
 
-    Table * table = ASM_init(MAX_WORDS);
-    assert(table->maxWords == MAX_WORDS);
-    assert(table->nBuckets == 16384);
+    Table * table = ASM_init(MAX_WORDS_NEW);
+    assert(table->maxWords == MAX_WORDS_NEW);
+    assert(table->nBuckets == N_BUCKETS_NEW);
     for (int i = 0; i < table->nBuckets; i++) {
         assert(table->array[i] == NULL);
     }
@@ -108,8 +95,6 @@ char ** get_random_existent_words(FILE * fp) {
 
     my_str_cpy(all_existent_words[i++], buf);
   }
-
-  // extract out 500 random words from the list
 
   // we need to check whether the random word hasn't already been seen before to prevent duplicates
   int countFreq[N_TRIALS] = {0};
