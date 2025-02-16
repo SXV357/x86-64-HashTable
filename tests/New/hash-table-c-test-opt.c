@@ -6,20 +6,9 @@
 #include <string.h>
 #include "../../src/hash-table.h"
 #include "../../src/str.h"
+#include "../tests.h"
 
 // For testing the new C implementation
-
-// function forward declarations
-void test_init();
-void test_hash(Table * table);
-
-void test_lookup(Table * table);
-void test_insert(Table * table);
-void test_update(Table * table);
-void test_delete(Table * table);
-void test_get(Table * table);
-
-void test_clear(Table * table);
 
 int main(int argc, char **argv) {
     printf("Running table initialization tests...\n");
@@ -28,12 +17,16 @@ int main(int argc, char **argv) {
 
     // initialize number of buckets to 256 with 255 maxWords
     printf("Running actual table initialization test...\n");
-    long maxWords = 255; // UPDATE 1
-    Table * table = init(maxWords);
+
+    Table * table = init(MAX_WORDS_NEW);
     assert(table);
-    assert(table->maxWords == maxWords);
-    assert(table->nBuckets == maxWords + 1);
+    assert(table->maxWords == MAX_WORDS_NEW);
+    assert(table->nBuckets == MAX_WORDS_NEW + 1);
     assert(table->array);
+    for (int i = 0; i < table->nBuckets; i++) {
+        assert(table->array[i] == NULL);
+    }
+
     printf("Actual table initialization test passed...\n\n");
 
     printf("Running table hash tests...\n");
@@ -112,6 +105,9 @@ void test_init() {
     assert(tableOne->maxWords == maxWordsValidOne);
     assert(tableOne->nBuckets == 64); // UPDATE 3
     assert(tableOne->array);
+    for (int i = 0; i < tableOne->nBuckets; i++) {
+        assert(tableOne->array[i] == NULL);
+    }
 
     long maxWordsValidTwo = 113.5;
     Table * tableTwo = init(maxWordsValidTwo);
@@ -119,6 +115,9 @@ void test_init() {
     assert(tableTwo->maxWords == 113);
     assert(tableTwo->nBuckets == 128); // UPDATE 4
     assert(tableTwo->array);
+    for (int j = 0; j < tableTwo->nBuckets; j++) {
+        assert(tableTwo->array[j] == NULL);
+    }
 
     long maxWordsInvalid[3] = {-3, 200000, 0};
     for (int i = 0; i < 3; i++) {
@@ -411,7 +410,12 @@ void test_delete(Table * table) {
 }
 
 void test_clear(Table * table) {
-    clear(table);
+    // NULL table
+    bool clearOne = clear(NULL);
+    assert(!clearOne);
+
+    bool clearTwo = clear(table);
+    assert(clearTwo);
     for (int i = 0; i < table->nBuckets; i++) {
         assert(table->array[i] == NULL);
     }

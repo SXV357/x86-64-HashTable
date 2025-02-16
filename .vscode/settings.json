@@ -15,6 +15,7 @@
         "_stdlib.h": "c",
         "_malloc.h": "c",
         "hash-table-chain.h": "c",
-        "str.h": "c"
+        "str.h": "c",
+        "tests.h": "c"
     }
 }

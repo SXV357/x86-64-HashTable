@@ -2,6 +2,7 @@
 
 // Constant definitions
 #define MAX_WORDS_OLD (256)
+#define MAX_WORDS_NEW (255)
 
 // Function headers
 
