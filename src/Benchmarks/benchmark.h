@@ -1,8 +1,10 @@
-#include <stdio.h>
-#include <stdbool.h>
 #include "../hash-table.h"
 
-// Constants
+#include <stdio.h>
+#include <stdbool.h>
+
+/* Constant definitions */
+
 #define MAX_WORDS_OLD (12308)
 #define MAX_WORDS_NEW (12288)
 
@@ -14,7 +16,8 @@
 #define BILLION (1.0E9)
 #define BILLION_LL (1000000000LL)
 
-// Function headers
+/* Function Prototypes */
+
 char ** load_non_existent_words();
 char ** get_random_existent_words(FILE *);
 long long benchmark_insert(Table *);
