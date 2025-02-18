@@ -1,21 +1,24 @@
+/* Shreyas Viswanathan, hash-table-c-test-opt.c 
+ * Last updated Feb 18, 2025
+ */
+
+#include "../../src/Utils/str.h"
+#include "../tests.h"
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "../../src/Utils/str.h"
-#include "../tests.h"
 
-// For testing the new C implementation
-
+/* Driver function that runs all tests associated with the optimized C hash table implementation. */
 int main(int argc, char **argv) {
-    printf("Running table initialization tests...\n");
+    printf(TABLE_INIT_TEST_START);
     test_init();
-    printf("Table initialization tests passed...\n\n");
+    printf(TABLE_INIT_TEST_END);
 
-    // initialize number of buckets to 256 with 255 maxWords
-    printf("Running actual table initialization test...\n");
+    printf(TABLE_INIT_ACC_START);
 
     Table * table = init(MAX_WORDS_NEW);
     assert(table);
@@ -26,39 +29,40 @@ int main(int argc, char **argv) {
         assert(table->array[i] == NULL);
     }
 
-    printf("Actual table initialization test passed...\n\n");
+    printf(TABLE_INIT_ACC_END);
 
-    printf("Running table hash tests...\n");
+    printf(TABLE_HASH_START);
     test_hash(table);
-    printf("Table hash tests passed...\n\n");
+    printf(TABLE_HASH_END);
     
-    printf("Running table insertion tests...\n");
+    printf(TABLE_INSERT_START);
     test_insert(table);
-    printf("Table insertion tests passed...\n\n");
+    printf(TABLE_INSERT_END);
 
-    printf("Running table lookup tests...\n");
+    printf(TABLE_LOOKUP_START);
     test_lookup(table);
-    printf("Table lookup tests passed...\n\n");
+    printf(TABLE_LOOKUP_END);
     
-    printf("Running table update tests...\n");
+    printf(TABLE_UPDATE_START);
     test_update(table);
-    printf("Table update tests passed...\n\n");
+    printf(TABLE_UPDATE_END);
     
-    printf("Running table get tests...\n");
+    printf(TABLE_GET_START);
     test_get(table);
-    printf("Table get tests passed...\n\n");
+    printf(TABLE_GET_END);
 
-    printf("Running table delete tests...\n");
+    printf(TABLE_DELETE_START);
     test_delete(table);
-    printf("Table delete tests passed...\n\n");
+    printf(TABLE_DELETE_END);
 
-    printf("Running table clear tests...\n");
+    printf(TABLE_CLEAR_START);
     test_clear(table);
-    printf("Table clear tests passed...\n");
+    printf(TABLE_CLEAR_END);
 
     return 0;
-}
+} /* main() */
 
+/* Function to test the hash function associated with the optimized C implementation. */
 void test_hash(Table * table) {
     // invalid values
     assert(hash(table, NULL) == -1);
@@ -90,19 +94,21 @@ void test_hash(Table * table) {
     my_str_cpy(w4, "flag");
     
     char *words[] = {w1, w2, w3, w4};
-    long indices[4] = {113, 77, 178, 237}; // UPDATE 2
+    long indices[4] = {113, 77, 178, 237};
 
     for (int i = 0; i < 4; i++) {
         assert(hash(table, words[i]) == indices[i]);
     }
-}
+} /* test_hash() */
 
+/* Function to test the init function associated with the optimized C implementation. */
 void test_init() {
+    // valid cases
     long maxWordsValidOne = 56;
     Table * tableOne = init(maxWordsValidOne);
     assert(tableOne);
     assert(tableOne->maxWords == maxWordsValidOne);
-    assert(tableOne->nBuckets == 64); // UPDATE 3
+    assert(tableOne->nBuckets == 64);
     assert(tableOne->array);
     for (int i = 0; i < tableOne->nBuckets; i++) {
         assert(tableOne->array[i] == NULL);
@@ -112,19 +118,21 @@ void test_init() {
     Table * tableTwo = init(maxWordsValidTwo);
     assert(tableTwo);
     assert(tableTwo->maxWords == 113);
-    assert(tableTwo->nBuckets == 128); // UPDATE 4
+    assert(tableTwo->nBuckets == 128);
     assert(tableTwo->array);
     for (int j = 0; j < tableTwo->nBuckets; j++) {
         assert(tableTwo->array[j] == NULL);
     }
 
+    // invalid cases
     long maxWordsInvalid[3] = {-3, 200000, 0};
     for (int i = 0; i < 3; i++) {
         Table * curr = init(maxWordsInvalid[i]);
         assert(curr == NULL);
     }
-}
+} /* test_init() */
 
+/* Function to test the insert function associated with the optimized C implementation. */
 void test_insert(Table * table) {
     // brand new key-value pair
     char *keyOne = calloc(MAX_KEY_SIZE, sizeof(char));
@@ -147,13 +155,7 @@ void test_insert(Table * table) {
     assert(insertThree);
     assert(table->nWords == 1);
 
-    // bunch of random key-value pairs
-        // random distribution + collision-creating
-    char *keys[] = {"apple", "banana", "carrot", "dog", "elephant", "fish", "grape", "house", "igloo", "jazz", "vine", "xray", "nest", "yarn", "boat", "under"};
-    long vals[16] = {42, 17, 98765, 1234, 555, 999999, 12, 8765, 333, 45678, 123, 456, 789, 101112, 131415, 161718};
-    int n = sizeof(vals) / sizeof(long);
-
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < N; i++) {
         char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
         assert(curr);
         my_str_cpy(curr, keys[i]);
@@ -198,10 +200,10 @@ void test_insert(Table * table) {
     bool insertInvalidTen = insert(NULL, NULL, -5);
 
     assert((!insertInvalidThree) && (!insertInvalidFour) && (!insertInvalidFive) && (!insertInvalidSix) && (!insertInvalidSeven) && (!insertInvalidEight) && (!insertInvalidNine) && (!insertInvalidTen));
-}
+} /* test_insert() */
 
+/* Function to test the lookup function associated with the optimized C implementation. */
 void test_lookup(Table * table) {
-    // existent key
     char *w1, *w2, *w3, *w4, *w5;
 
     w1 = calloc(MAX_KEY_SIZE, sizeof(char));
@@ -249,10 +251,10 @@ void test_lookup(Table * table) {
     assert(table->array[idx]->next->next == NULL);
 
     assert((!lookupThree) && (!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
-}
+} /* test_lookup() */
 
+/* Function to test the update function associated with the optimized C implementation. */
 void test_update(Table * table) {
-    // update the value of an existing key
     char *w1, *w2, *w3, *w4, *w5, *w6;
 
     w1 = calloc(MAX_KEY_SIZE, sizeof(char));
@@ -279,6 +281,7 @@ void test_update(Table * table) {
     assert(w6);
     my_str_cpy(w6, "ajdhjkfe");
 
+    // update value associated with an existing key
     long newValOne = 192021;
     bool updateOne = update(table, w1, newValOne);
     assert(updateOne);
@@ -309,10 +312,10 @@ void test_update(Table * table) {
     bool updateThirteen = update(NULL, NULL, -765);
 
     assert((!updateFive) && (!updateSix) && (!updateSeven) && (!updateEight) && (!updateNine) && (!updateTen) && (!updateEleven) && (!updateTwelve) && (!updateThirteen));
-}
+} /* test_update() */
 
+/* Function to test the get function associated with the optimized C implementation. */
 void test_get(Table * table) {
-    // valid key
     char *w1, *w2, *w3;
 
     w1 = calloc(MAX_KEY_SIZE, sizeof(char));
@@ -327,6 +330,7 @@ void test_get(Table * table) {
     assert(w3);
     my_str_cpy(w3, "");
 
+    // existent key
     long getOne = get(table, w1);
     assert(getOne == 98765);
 
@@ -342,10 +346,10 @@ void test_get(Table * table) {
     long getSeven = get(NULL, NULL);
 
     assert(getThree + getFour + getFive + getSix + getSeven == -5);
-}
+} /* test_get() */
 
+/* Function to test the delete function associated with the optimized C implementation. */
 void test_delete(Table * table) {    
-    // delete head in a bucket with > 1 node
     char *w1, *w2, *w3, *w4, *w5, *w6, *w7;
 
     w1 = calloc(MAX_KEY_SIZE, sizeof(char));
@@ -376,6 +380,7 @@ void test_delete(Table * table) {
     assert(w7);
     my_str_cpy(w7, "AK47");
 
+    // delete existing key in a bucket with > 1 node
     long idxOne = hash(table, w1);
     bool deleteOne = delete(table, w1);
     assert(deleteOne);
@@ -406,13 +411,15 @@ void test_delete(Table * table) {
     bool deleteNine = delete(NULL, w6);
     
     assert((!deleteSix) && (!deleteSeven) && (!deleteEight) && (!deleteNine));
-}
+} /* test_delete() */
 
+/* Function to test the clear function associated with the optimized C implementation. */
 void test_clear(Table * table) {
     // NULL table
     bool clearOne = clear(NULL);
     assert(!clearOne);
 
+    // non-NULL table
     bool clearTwo = clear(table);
     assert(clearTwo);
     for (int i = 0; i < table->nBuckets; i++) {
@@ -420,4 +427,4 @@ void test_clear(Table * table) {
     }
 
     assert(table->nWords == 0);
-}
+} /* test_clear() */

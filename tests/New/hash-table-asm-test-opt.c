@@ -1,31 +1,34 @@
+/* Shreyas Viswanathan, hash-table-asm-test-opt.c 
+ * Last updated Feb 18, 2025
+ */
+
+#include "../../src/Utils/str.h"
+#include "../tests.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../../src/Utils/str.h"
-#include "../tests.h"
 
-// For testing the new x86 implementation
+/* Function prototypes for the x86-64 functions being tested */
 
-// functions defined in the assembly implementation
 extern Table * ASM_init(long maxWords);
 extern long ASM_hash(Table * table, char * word);
-
 extern bool ASM_lookup(Table * table, char * word);
 extern long ASM_get(Table * table, char * word);
 extern bool ASM_insert(Table * table, char * word, long value);
 extern bool ASM_delete(Table * table, char * word);
 extern bool ASM_update(Table * table, char * word, long value);
-
 extern bool ASM_clear(Table * table);
 
+/* Driver function that runs all tests associated with the optimized x86-64 hash table implementation. */
 int main(int argc, char **argv) {
-   printf("Running table init tests...\n");
+   printf(TABLE_INIT_TEST_START);
    test_init();
-   printf("Table init tests passed...\n\n");
+   printf(TABLE_INIT_TEST_END);
 
-   printf("Running actual table initialization test...\n");
+   printf(TABLE_INIT_ACC_START);
 
    Table * table = ASM_init(MAX_WORDS_NEW);
    assert(table);
@@ -36,45 +39,47 @@ int main(int argc, char **argv) {
       assert(table->array[i] == NULL);
    }
 
-   printf("Actual table initialization test passed...\n\n");
+   printf(TABLE_INIT_ACC_END);
 
-   printf("Running table hash tests...\n");
+   printf(TABLE_HASH_START);
    test_hash(table);
-   printf("Table hash tests passed...\n\n");
+   printf(TABLE_HASH_END);
 
-   printf("Running table insert tests...\n");
+   printf(TABLE_INSERT_START);
    test_insert(table);
-   printf("Table insert tests passed...\n\n");
+   printf(TABLE_INSERT_END);
 
-   printf("Running table lookup tests...\n");
+   printf(TABLE_LOOKUP_START);
    test_lookup(table);
-   printf("Table lookup tests passed...\n\n");
+   printf(TABLE_LOOKUP_END);
 
-   printf("Running table get tests...\n");
+   printf(TABLE_GET_START);
    test_get(table);
-   printf("Table get tests passed...\n\n");
+   printf(TABLE_GET_END);
 
-   printf("Running table delete tests...\n");
+   printf(TABLE_DELETE_START);
    test_delete(table);
-   printf("Table delete tests passed...\n\n");
+   printf(TABLE_DELETE_END);
 
-   printf("Running table update tests...\n");
+   printf(TABLE_UPDATE_START);
    test_update(table);
-   printf("Table update tests passed...\n\n");
+   printf(TABLE_UPDATE_END);
 
-   printf("Running table clear test...\n");
+   printf(TABLE_CLEAR_START);
    test_clear(table);
-   printf("Table clear test passed...\n");
+   printf(TABLE_CLEAR_END);
 
    return 0;
-}
+} /* main() */
 
+/* Function to test the init function associated with the optimized x86-64 implementation. */
 void test_init() {
+   // valid cases
    long maxWordsValidOne = 56;
    Table * tableOne = ASM_init(maxWordsValidOne);
    assert(tableOne);
    assert(tableOne->maxWords == maxWordsValidOne);
-   assert(tableOne->nBuckets == 64); // UPDATE 2
+   assert(tableOne->nBuckets == 64);
    assert(tableOne->array);
    for (int i = 0; i < tableOne->nBuckets; i++) {
      assert(tableOne->array[i] == NULL);
@@ -84,21 +89,23 @@ void test_init() {
    Table * tableTwo = ASM_init(maxWordsValidTwo);
    assert(tableTwo);
    assert(tableTwo->maxWords == 113);
-   assert(tableTwo->nBuckets == 128); // UPDATE 3
+   assert(tableTwo->nBuckets == 128);
    assert(tableTwo->array);
    for (int j = 0; j < tableTwo->nBuckets; j++) {
       assert(tableTwo->array[j] == NULL);
    }
 
+   // invalid cases
    long maxWordsInvalid[3] = {-3, 200000, 0};
    for (int k = 0; k < 3; k++) {
       Table * curr = ASM_init(maxWordsInvalid[k]);
       assert(curr == NULL);
    }
-}
+} /* test_init() */
 
+/* Function to test the hash function associated with the optimized x86-64 implementation. */
 void test_hash(Table * table) {
-  // test for a valid character
+  // valid keys
   char *word = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(word);
   my_str_cpy(word, "hello");
@@ -131,10 +138,10 @@ void test_hash(Table * table) {
   assert(ASM_hash(NULL, w1) == -1);
   assert(ASM_hash(NULL, w2) == -1);
   assert(ASM_hash(NULL, NULL) == -1);
-}
+} /* test_hash() */
 
+/* Function to test the insert function associated with the optimized x86-64 implementation. */
 void test_insert(Table * table) {
-  // brand new key-value pair
   char *w1, *w2, *w3, *w4;
   
   w1 = calloc(MAX_KEY_SIZE, sizeof(char));
@@ -153,6 +160,7 @@ void test_insert(Table * table) {
   assert(w4);
   my_str_cpy(w4, "something");
 
+  // brand new key-value pair
   long valOne = 15;
   bool insertOne = ASM_insert(table, w1, valOne);
   assert(insertOne);
@@ -168,11 +176,7 @@ void test_insert(Table * table) {
   assert(insertThree);
   assert(table->nWords == 1);
 
-  char *keys[] = {"apple", "banana", "carrot", "dog", "elephant", "fish", "grape", "house", "igloo", "jazz", "vine", "xray", "nest", "yarn", "boat", "under"};
-  long vals[16] = {42, 17, 98765, 1234, 555, 999999, 12, 8765, 333, 45678, 123, 456, 789, 101112, 131415, 161718};
-  int n = sizeof(vals) / sizeof(long);
-
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < N; i++) {
     char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(curr);
     my_str_cpy(curr, keys[i]);
@@ -205,10 +209,10 @@ void test_insert(Table * table) {
 
   assert((!insertInvalidThree) && (!insertInvalidFour) && (!insertInvalidFive) && (!insertInvalidSix) && 
  (!insertInvalidSeven) && (!insertInvalidEight) && (!insertInvalidNine) && (!insertInvalidTen));
-}
+} /* test_insert() */
 
+/* Function to test the lookup function associated with the optimized x86-64 implementation. */
 void test_lookup(Table * table) {
-   // existent key
    char *w1, *w2, *w3, *w4, *w5;
 
    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
@@ -231,6 +235,7 @@ void test_lookup(Table * table) {
    assert(w5);
    my_str_cpy(w5, "fish");
 
+   // existent key
    bool lookupOne = ASM_lookup(table, w1);
    assert(lookupOne);
 
@@ -258,10 +263,10 @@ void test_lookup(Table * table) {
    assert(table->array[idx]->next->next == NULL);
 
    assert((!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
-}
+} /* test_lookup() */
 
+/* Function to test the get function associated with the optimized x86-64 implementation. */
 void test_get(Table * table) {
-  // valid key
   char *w1, *w2, *w3, *w4;
 
   w1 = calloc(MAX_KEY_SIZE, sizeof(char));
@@ -280,6 +285,7 @@ void test_get(Table * table) {
   assert(w4);
   my_str_cpy(w4, "");
 
+  // existent valid key
   long getOne = ASM_get(table, w1);
   assert(getOne == 98765);
 
@@ -299,10 +305,10 @@ void test_get(Table * table) {
   long getEight = ASM_get(NULL, w4);
 
   assert(getFour + getFive + getSix + getSeven + getEight == -5);
-}
+} /* test_get() */
 
+/* Function to test the update function associated with the optimized x86-64 implementation. */
 void test_update(Table * table) {
-  // update value of an existing key
   char *w1, *w2, *w3, *w4, *w5, *w6, *w7;
 
    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
@@ -333,42 +339,43 @@ void test_update(Table * table) {
    assert(w7);
    my_str_cpy(w7, "ajdhjkfe");
 
-  bool updateOne = ASM_update(table, w1, 192021);
-  assert(updateOne);
-  assert(table->nWords == 15);
+   // update value of an existing key
+   bool updateOne = ASM_update(table, w1, 192021);
+   assert(updateOne);
+   assert(table->nWords == 15);
 
-  // update value of a non-existent key
-  bool updateTwo = ASM_update(table, w2, 81);
-  assert(!updateTwo);
-  assert(table->nWords == 16);
+   // update value of a non-existent key
+   bool updateTwo = ASM_update(table, w2, 81);
+   assert(!updateTwo);
+   assert(table->nWords == 16);
 
-  // invalid values
-  bool updateThree = ASM_update(table, NULL, 67);
-  assert(!updateThree);
+   // invalid values
+   bool updateThree = ASM_update(table, NULL, 67);
+   assert(!updateThree);
 
-  bool updateFour = ASM_update(table, w3, -25);
-  assert(!updateFour);
+   bool updateFour = ASM_update(table, w3, -25);
+   assert(!updateFour);
 
-  bool updateCurr = ASM_update(table, w4, -112);
-  assert(!updateCurr);
+   bool updateCurr = ASM_update(table, w4, -112);
+   assert(!updateCurr);
 
-  // test NULL table and empty string
-  bool updateFive = ASM_update(table, w5, 68);
-  bool updateSix = ASM_update(table, w5, -76);
-  bool updateSeven = ASM_update(table, NULL, -43);
-  bool updateEight = ASM_update(NULL, w5, 90);
-  bool updateNine = ASM_update(NULL, w5, -36);
-  bool updateTen = ASM_update(NULL, w6, 11);
-  bool updateEleven = ASM_update(NULL, w7, 34);
-  bool updateTwelve = ASM_update(NULL, NULL, 1111);
-  bool updateThirteen = ASM_update(NULL, NULL, -765);
+   // test NULL table and empty string
+   bool updateFive = ASM_update(table, w5, 68);
+   bool updateSix = ASM_update(table, w5, -76);
+   bool updateSeven = ASM_update(table, NULL, -43);
+   bool updateEight = ASM_update(NULL, w5, 90);
+   bool updateNine = ASM_update(NULL, w5, -36);
+   bool updateTen = ASM_update(NULL, w6, 11);
+   bool updateEleven = ASM_update(NULL, w7, 34);
+   bool updateTwelve = ASM_update(NULL, NULL, 1111);
+   bool updateThirteen = ASM_update(NULL, NULL, -765);
 
-  assert((!updateFive) && (!updateSix) && (!updateSeven) && (!updateEight) && (!updateNine) && 
-  (!updateTen) && (!updateEleven) && (!updateTwelve) && (!updateThirteen));
-}
+   assert((!updateFive) && (!updateSix) && (!updateSeven) && (!updateEight) && (!updateNine) && 
+   (!updateTen) && (!updateEleven) && (!updateTwelve) && (!updateThirteen));
+} /* test_update() */
 
+/* Function to test the delete function associated with the optimized x86-64 implementation. */
 void test_delete(Table * table) {
-  // delete head in bucket with > 1 node
   char *w1, *w2, *w3, *w4, *w5, *w6;
 
    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
@@ -395,43 +402,46 @@ void test_delete(Table * table) {
    assert(w6);
    my_str_cpy(w6, "Rampage");
 
-  long idxOne = ASM_hash(table, w1);
+   // delete head in bucket with > 1 node
+   long idxOne = ASM_hash(table, w1);
 
-  bool deleteOne = ASM_delete(table, w1);
-  assert(deleteOne);
-  assert(table->nWords == 16);
-  assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
+   bool deleteOne = ASM_delete(table, w1);
+   assert(deleteOne);
+   assert(table->nWords == 16);
+   assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
 
-  // delete only node in a bucket
-  long idxThree = ASM_hash(table, w3);
-  bool deleteThree = ASM_delete(table, w3);
-  assert(deleteThree);
-  assert(table->nWords == 15);
-  assert(table->array[idxThree] == NULL);
+   // delete only node in a bucket
+   long idxThree = ASM_hash(table, w3);
+   bool deleteThree = ASM_delete(table, w3);
+   assert(deleteThree);
+   assert(table->nWords == 15);
+   assert(table->array[idxThree] == NULL);
 
-  // delete non-existent key
-  bool deleteFour = ASM_delete(table, w4);
-  assert(!deleteFour);
-  assert(table->nWords == 15);
+   // delete non-existent key
+   bool deleteFour = ASM_delete(table, w4);
+   assert(!deleteFour);
+   assert(table->nWords == 15);
 
-  // delete NULL key
-  bool deleteFive = ASM_delete(table, NULL);
-  assert(!deleteFive);
-  assert(table->nWords == 15);
+   // delete NULL key
+   bool deleteFive = ASM_delete(table, NULL);
+   assert(!deleteFive);
+   assert(table->nWords == 15);
 
-  // NULL table and empty word tests
-  bool deleteSix = ASM_delete(table, w5);
-  bool deleteSeven = ASM_delete(NULL, w6);
-  bool deleteEight = ASM_delete(NULL, w5);
+   // NULL table and empty word tests
+   bool deleteSix = ASM_delete(table, w5);
+   bool deleteSeven = ASM_delete(NULL, w6);
+   bool deleteEight = ASM_delete(NULL, w5);
 
-  assert((!deleteSix) && (!deleteSeven) && (!deleteEight));
-}
+   assert((!deleteSix) && (!deleteSeven) && (!deleteEight));
+} /* test_delete() */
 
+/* Function to test the clear function associated with the optimized x86-64 implementation. */
 void test_clear(Table * table) {
    // NULL table
    bool clearOne = ASM_clear(NULL);
    assert(!clearOne);
 
+   // non-NULL table
    bool clearTwo = ASM_clear(table);
    assert(clearTwo);
    for (int i = 0; i < table->nBuckets; i++) {
@@ -439,4 +449,4 @@ void test_clear(Table * table) {
    }
 
    assert(table->nWords == 0);
-}
+} /* test_clear() */
