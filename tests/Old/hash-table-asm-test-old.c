@@ -1,30 +1,32 @@
+/* Shreyas Viswanathan, hash-table-c-test-old.c 
+ * Last updated Feb 17, 2025
+ */
+
+#include "../tests.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../tests.h"
 
-// For testing the old x86 implementation
+/* Function prototypes for the x86-64 functions being tested */
+extern Table * ASM_init(long);
+extern long ASM_hash(Table *, char *);
+extern bool ASM_lookup(Table *, char *);
+extern long ASM_get(Table *, char *);
+extern bool ASM_insert(Table *, char *, long);
+extern bool ASM_delete(Table *, char *);
+extern bool ASM_update(Table *, char *, long);
+extern bool ASM_clear(Table *);
 
-// functions defined in the assembly implementation
-extern Table * ASM_init(long maxWords);
-extern long ASM_hash(Table * table, char * word);
-
-extern bool ASM_lookup(Table * table, char * word);
-extern long ASM_get(Table * table, char * word);
-extern bool ASM_insert(Table * table, char * word, long value);
-extern bool ASM_delete(Table * table, char * word);
-extern bool ASM_update(Table * table, char * word, long value);
-
-extern bool ASM_clear(Table * table);
-
+/* Driver function that runs all tests associated with the old x86-64 hash table implementation. */
 int main(int argc, char **argv) {
-   printf("Running table init tests...\n");
+   printf(TABLE_INIT_TEST_START);
    test_init();
-   printf("Table init tests passed...\n\n");
+   printf(TABLE_INIT_TEST_END);
 
-   printf("Running actual table initialization test...\n");
+   printf(TABLE_INIT_ACC_START);
 
    Table * table = ASM_init(MAX_WORDS_OLD);
    assert(table);
@@ -35,40 +37,42 @@ int main(int argc, char **argv) {
       assert(table->array[i] == NULL);
    }
 
-   printf("Actual table initialization test passed...\n\n");
+   printf(TABLE_INIT_ACC_END);
 
-   printf("Running table hash tests...\n");
+   printf(TABLE_HASH_START);
    test_hash(table);
-   printf("Table hash tests passed...\n\n");
+   printf(TABLE_HASH_END);
 
-   printf("Running table insert tests...\n");
+   printf(TABLE_INSERT_START);
    test_insert(table);
-   printf("Table insert tests passed...\n\n");
+   printf(TABLE_INSERT_END);
 
-   printf("Running table lookup tests...\n");
+   printf(TABLE_LOOKUP_START);
    test_lookup(table);
-   printf("Table lookup tests passed...\n\n");
+   printf(TABLE_LOOKUP_END);
 
-   printf("Running table get tests...\n");
+   printf(TABLE_GET_START);
    test_get(table);
-   printf("Table get tests passed...\n\n");
+   printf(TABLE_GET_END);
 
-   printf("Running table delete tests...\n");
+   printf(TABLE_DELETE_START);
    test_delete(table);
-   printf("Table delete tests passed...\n\n");
+   printf(TABLE_DELETE_END);
 
-   printf("Running table update tests...\n");
+   printf(TABLE_UPDATE_START);
    test_update(table);
-   printf("Table update tests passed...\n\n");
+   printf(TABLE_UPDATE_END);
 
-   printf("Running table clear test...\n");
+   printf(TABLE_CLEAR_START);
    test_clear(table);
-   printf("Table clear test passed...\n");
+   printf(TABLE_CLEAR_END);
 
    return 0;
-}
+} /* main() */
 
+/* Function to test the init function associated with the old x86-64 implementation. */
 void test_init() {
+   // valid cases
    long maxWordsValidOne = 56;
    Table * tableOne = ASM_init(maxWordsValidOne);
    assert(tableOne);
@@ -89,13 +93,15 @@ void test_init() {
       assert(tableTwo->array[j] == NULL);
    }
 
+   // invalid cases
    long maxWordsInvalid[3] = {-3, 200000, 0};
    for (int k = 0; k < 3; k++) {
       Table * curr = ASM_init(maxWordsInvalid[k]);
       assert(curr == NULL);
    }
-}
+} /* test_init() */
 
+/* Function to test the hash function associated with the old x86-64 implementation. */
 void test_hash(Table * table) {
    // test for valid characters
    char *words[] = {"hello", "bye", "see", "flag"};
@@ -112,8 +118,9 @@ void test_hash(Table * table) {
    assert(ASM_hash(NULL, "something") == -1);
    assert(ASM_hash(NULL, "") == -1);
    assert(ASM_hash(NULL, NULL) == -1);
-}
+} /* test_hash() */
 
+/* Function to test the insert function associated with the old x86-64 implementation. */
 void test_insert(Table * table) {
   // brand new key-value pair
   char *keyOne = "Hello";
@@ -132,11 +139,7 @@ void test_insert(Table * table) {
   assert(insertThree);
   assert(table->nWords == 1);
 
-  char *keys[] = {"apple", "banana", "carrot", "dog", "elephant", "fish", "grape", "house", "igloo", "jazz", "vine", "xray", "nest", "yarn", "boat", "under"};
-  long vals[16] = {42, 17, 98765, 1234, 555, 999999, 12, 8765, 333, 45678, 123, 456, 789, 101112, 131415, 161718};
-  int n = sizeof(vals) / sizeof(long);
-
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < N; i++) {
     bool insertCurr = ASM_insert(table, keys[i], vals[i]);
     assert(insertCurr);
   }
@@ -165,8 +168,9 @@ void test_insert(Table * table) {
 
   assert((!insertInvalidThree) && (!insertInvalidFour) && (!insertInvalidFive) && (!insertInvalidSix) && 
  (!insertInvalidSeven) && (!insertInvalidEight) && (!insertInvalidNine) && (!insertInvalidTen));
-}
+} /* test_insert() */
 
+/* Function to test the lookup function associated with the old x86-64 implementation. */
 void test_lookup(Table * table) {
    // existent key
    bool lookupOne = ASM_lookup(table, "banana");
@@ -187,8 +191,9 @@ void test_lookup(Table * table) {
    bool lookupSeven = ASM_lookup(table, "");
 
    assert((!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
-}
+} /* test_lookup() */
 
+/* Function to test the get function associated with the old x86-64 implementation. */
 void test_get(Table * table) {
   // valid key
   long getOne = ASM_get(table, "carrot");
@@ -210,8 +215,9 @@ void test_get(Table * table) {
   long getEight = ASM_get(NULL, "");
 
   assert(getFour + getFive + getSix + getSeven + getEight == -5);
-}
+} /* test_get() */
 
+/* Function to test the update function associated with the old x86-64 implementation. */
 void test_update(Table * table) {
   // update value of an existing key
   bool updateOne = ASM_update(table, "apple", 192021);
@@ -234,7 +240,6 @@ void test_update(Table * table) {
   assert(!updateCurr);
 
   // test NULL table and empty string
-
   bool updateFive = ASM_update(table, "", 68);
   bool updateSix = ASM_update(table, "", -76);
   bool updateSeven = ASM_update(table, NULL, -43);
@@ -247,8 +252,9 @@ void test_update(Table * table) {
 
   assert((!updateFive) && (!updateSix) && (!updateSeven) && (!updateEight) && (!updateNine) && 
   (!updateTen) && (!updateEleven) && (!updateTwelve) && (!updateThirteen));
-}
+} /* test_update() */
 
+/* Function to test the delete function associated with the old x86-64 implementation. */
 void test_delete(Table * table) {
   // delete head in bucket with > 1 node
   char * keyOne = "nest";
@@ -291,8 +297,9 @@ void test_delete(Table * table) {
   bool deleteNine = ASM_delete(NULL, "Rampage");
 
   assert((!deleteSix) && (!deleteSeven) && (!deleteEight) && (!deleteNine));
-}
+} /* test_delete() */
 
+/* Function to test the clear function associated with the old x86-64 implementation. */
 void test_clear(Table * table) {
    // NULL table
    bool clearOne = ASM_clear(NULL);
@@ -305,4 +312,4 @@ void test_clear(Table * table) {
    }
 
    assert(table->nWords == 0);
-}
+} /* test_clear() */

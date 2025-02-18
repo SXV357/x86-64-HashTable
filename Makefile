@@ -36,4 +36,4 @@ runall: src/runall.c
 	$(CC) $(C_FLAGS) src/runall.c -o runall
 
 clean:
-	rm -f c-old-test asm-old-test c-opt-test asm-opt-test old-benchmark new-benchmark
+	rm -f c-old-test asm-old-test c-opt-test asm-opt-test old-benchmark new-benchmark runall
