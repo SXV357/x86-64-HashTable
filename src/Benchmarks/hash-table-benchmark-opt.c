@@ -83,6 +83,45 @@ int main(int argc, char **argv) {
 
     print_metrics(insert_total_ns, existent_lookup_total_ns, non_existent_lookup_total_ns, existent_delete_total_ns, non_existent_delete_total_ns);
 
+    /* Cleanup */
+
+    // close all files
+    fclose(neFp);
+    neFp = NULL;
+
+    fclose(wordFp);
+    wordFp = NULL;
+
+    // free all arrays
+    int i;
+    for (i = 0; i < N_NON_EXISTENT; i++) {
+      free(non_existent_words[i]);
+      non_existent_words[i] = NULL;
+
+      free(random_existent_words[i]);
+      random_existent_words[i] = NULL;
+    }
+
+    for (i = 0; i < N_TRIALS; i++) {
+      free(all_existent_words[i]);
+      all_existent_words[i] = NULL;
+    }
+
+    free(non_existent_words);
+    free(all_existent_words);
+    free(random_existent_words);
+
+    non_existent_words = all_existent_words = random_existent_words = NULL;
+
+    // clear out all nodes and free the table
+    ASM_clear(table);
+    
+    free(table->array);
+    table->array = NULL;
+
+    free(table);
+    table = NULL;
+
     return 0;
 } /* main() */
 

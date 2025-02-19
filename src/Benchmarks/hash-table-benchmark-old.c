@@ -23,6 +23,7 @@ extern Table * ASM_init(long);
 extern bool ASM_insert(Table *, char *, long);
 extern bool ASM_lookup(Table *, char *);
 extern bool ASM_delete(Table *, char *);
+extern bool ASM_clear(Table *);
 
 /* Utility function that takes in accumulated time across the 3 major operations and prints the average times */
 void print_metrics(long long oldInsertTime, long long oldExistentLookupTime, long long oldNonExistentLookupTime, 
@@ -68,19 +69,51 @@ int main(int argc, char **argv) {
 
     char ** random_existent_words = get_random_existent_words(all_existent_words);
 
-    // as of this point all file reading has been done already and no more will take place so close both files
-    fclose(neFp);
-    neFp = NULL;
-
-    fclose(wordFp);
-    wordFp = NULL;
-
     long long existent_lookup_total_ns = benchmark_lookup_and_delete(table, random_existent_words, ASM_lookup, true);
     long long non_existent_lookup_total_ns = benchmark_lookup_and_delete(table, non_existent_words, ASM_lookup, false);
     long long existent_delete_total_ns = benchmark_lookup_and_delete(table, random_existent_words, ASM_delete, true);
     long long non_existent_delete_total_ns = benchmark_lookup_and_delete(table, non_existent_words, ASM_delete, false);
 
     print_metrics(insert_total_ns, existent_lookup_total_ns, non_existent_lookup_total_ns, existent_delete_total_ns, non_existent_delete_total_ns);
+
+    /* Cleanup */
+
+    // close all files
+    fclose(neFp);
+    neFp = NULL;
+
+    fclose(wordFp);
+    wordFp = NULL;
+
+    // free all arrays
+    int i;
+    for (i = 0; i < N_NON_EXISTENT; i++) {
+      free(non_existent_words[i]);
+      non_existent_words[i] = NULL;
+
+      free(random_existent_words[i]);
+      random_existent_words[i] = NULL;
+    }
+
+    for (i = 0; i < N_TRIALS; i++) {
+      free(all_existent_words[i]);
+      all_existent_words[i] = NULL;
+    }
+
+    free(non_existent_words);
+    free(all_existent_words);
+    free(random_existent_words);
+
+    non_existent_words = all_existent_words = random_existent_words = NULL;
+
+    // clear out all nodes and free the table
+    ASM_clear(table);
+    
+    free(table->array);
+    table->array = NULL;
+
+    free(table);
+    table = NULL;
 
     return 0;
 } /* main() */
