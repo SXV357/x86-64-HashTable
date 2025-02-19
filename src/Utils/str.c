@@ -1,5 +1,5 @@
 /* Shreyas Viswanathan, str.c 
- * Last updated Feb 18, 2025
+ * Last updated Feb 19, 2025
  */
 
 #include "./str.h"
@@ -13,7 +13,7 @@
  * padded with extra 0's if necessary - when the string defined by the src
  * parameter is less than 32 bytes long.
  */
-void my_str_cpy(char * dest, char * src) {
+void my_strncpy(char * dest, char * src) {
     int i = 0;
     while ((src[i] != '\0') && (i < MAX_KEY_SIZE)) {
         dest[i] = src[i];
@@ -28,7 +28,7 @@ void my_str_cpy(char * dest, char * src) {
 } /* my_str_cpy() */
 
 /* In-line implementation of strlen. */
-int my_str_len(char *s) {
+int my_strlen(char *s) {
     char *temp = s;
     int len = 0;
     
@@ -37,11 +37,11 @@ int my_str_len(char *s) {
     return len;
 } /* my_str_len() */
 
-/* In-line implementation of strcmp that uses long comparison 
+/* In-line implementation of strncmp that uses long comparison 
  * instead of byte-by-byte comparisons. This function assumes that
  * both the strings to be compared are exactly 32 bytes long. 
  */
-int my_str_cmp_opt(char * s1, char * s2) {
+int my_strncmp(char * s1, char * s2) {
     char *s1_tmp = s1;
     char *s2_tmp = s2;
 
@@ -68,7 +68,7 @@ int my_str_cmp_opt(char * s1, char * s2) {
 } /* my_str_cmp_opt */
 
 /* In-line implementation of strdup. */
-char * my_str_dup(char * s) {
+char * my_strdup(char * s) {
     char * res = calloc(MAX_KEY_SIZE, sizeof(char));
     if (!res) {
         return NULL;

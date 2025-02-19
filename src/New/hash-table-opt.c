@@ -1,5 +1,5 @@
 /* Shreyas Viswanathan, hash-table-old.c 
- * Last updated Feb 18, 2025
+ * Last updated Feb 19, 2025
  */
 
 #include "../hash-table.h"
@@ -15,7 +15,7 @@
 Table * init(long maxWords) {
     long powersOfTwo[12] = {64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072};
     
-    if ((maxWords <= 0) || (maxWords > powersOfTwo[N - 1])) {
+    if ((maxWords <= 0) || (maxWords > powersOfTwo[N_BUCKETS - 1])) {
         return NULL;
     }
 
@@ -26,10 +26,10 @@ Table * init(long maxWords) {
     }
 
     // set it to the largest power of 2 by default because we will later factor maxWords into this
-    table->nBuckets = powersOfTwo[N - 1];
+    table->nBuckets = powersOfTwo[N_BUCKETS - 1];
 
     // set number of buckets based on maxWords parameter(for saving space)
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N_BUCKETS; i++) {
        if (maxWords < powersOfTwo[i]) {
             table->nBuckets = powersOfTwo[i];
             break;
@@ -55,11 +55,11 @@ Table * init(long maxWords) {
 
 /* This function returns the index that the word parameter hashes to in the range [0, table->nBuckets - 1]. */
 long hash(Table * table, char * word) {
-    if ((table == NULL) || (word == NULL)) {
+    if ((!table) || (!word)) {
         return -1;
     }
 
-    int len = my_str_len(word);
+    int len = my_strlen(word);
     if (!len) return -1;
     
     long hashNum = 1;
@@ -75,17 +75,18 @@ long hash(Table * table, char * word) {
 
 /* Looks up the word specified by the parameter in the hash table and returns if it exists or not. */
 bool lookup(Table * table, char * word) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0)) {
+    if ((!table) || (!word) || (!my_strlen(word))) {
         return false;
     }
 
     long hashNum = hash(table, word);
 
+    // keep track of prev for detachment purposes once node is found
     Node * prev = NULL;
     Node * head = table->array[hashNum];
 
     while (head) {
-        if (!(my_str_cmp_opt(head->word, word))) {
+        if (!(my_strncmp(head->word, word))) {
             break;
         }
         prev = head;
@@ -96,7 +97,7 @@ bool lookup(Table * table, char * word) {
         return false;
     }
 
-    if (prev != NULL) {
+    if (prev) {
         prev->next = head->next;
 
         head->next = table->array[hashNum];
@@ -110,7 +111,7 @@ bool lookup(Table * table, char * word) {
  * If the word doesn't exist, -1 is returned since negative values are not allowed by default.
  */
 long get(Table * table, char * word) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0)) {
+    if ((!table) || (!word) || (!my_strlen(word))) {
         return -1;
     }
 
@@ -118,7 +119,7 @@ long get(Table * table, char * word) {
     Node * head = table->array[targetIdx];
 
     while (head) {
-        if (!(my_str_cmp_opt(head->word, word))) {
+        if (!(my_strncmp(head->word, word))) {
             return head->value;
         }
         head = head->next;
@@ -133,7 +134,7 @@ long get(Table * table, char * word) {
  */
 bool insert(Table * table, char * word, long value) {
     // empty keys and negative values not allowed
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0) || (value < 0) || 
+    if ((!table) || (!word) || (!my_strlen(word)) || (value < 0) || 
         (table->nWords > table->maxWords)) {
         return false;
     }
@@ -152,7 +153,7 @@ bool insert(Table * table, char * word, long value) {
         return false;
     }
 
-    my_str_cpy(new->word, word);
+    my_strncpy(new->word, word);
     new->value = value;
     new->next = NULL;
 
@@ -164,7 +165,7 @@ bool insert(Table * table, char * word, long value) {
     } else {
         // case 2: non-empty chain
         while (head) {
-            if (!(my_str_cmp_opt(head->word, word))) {
+            if (!(my_strncmp(head->word, word))) {
                 // the specified key-value pair already exists
                 if (head->value == value) {
                     return false;
@@ -191,7 +192,7 @@ bool insert(Table * table, char * word, long value) {
  * If the key doesn't exist, the function returns false otherwise true.
  */
 bool delete(Table * table, char * word) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0)) {
+    if ((!table) || (!word) || (!my_strlen(word))) {
         return false;
     }
 
@@ -203,7 +204,7 @@ bool delete(Table * table, char * word) {
     bool found = false;
 
     while (head) {
-        if (!(my_str_cmp_opt(head->word, word))) {
+        if (!(my_strncmp(head->word, word))) {
             found = true;
             Node * temp = head;
 
@@ -238,7 +239,7 @@ bool delete(Table * table, char * word) {
  * word and value parameters as key and value is inserted at the end of the specific chain.
  */
 bool update(Table * table, char * word, long value) {
-    if ((table == NULL) || (word == NULL) || (my_str_len(word) == 0) || (value < 0)) {
+    if ((!table) || (!word) || (!my_strlen(word)) || (value < 0)) {
         return false;
     }
 
@@ -246,7 +247,7 @@ bool update(Table * table, char * word, long value) {
     Node * head = table->array[hashNum];
 
     while (head) {
-        if (!(my_str_cmp_opt(head->word, word))) {
+        if (!(my_strncmp(head->word, word))) {
             head->value = value;
             return true;
         } else if (head->next == NULL) {
@@ -266,7 +267,7 @@ bool update(Table * table, char * word, long value) {
         return false;
     }
 
-    e->word = my_str_dup(word);
+    e->word = my_strdup(word);
     e->value = value;
     e->next = NULL;
 

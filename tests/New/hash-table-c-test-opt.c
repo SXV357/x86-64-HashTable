@@ -1,5 +1,5 @@
 /* Shreyas Viswanathan, hash-table-c-test-opt.c 
- * Last updated Feb 18, 2025
+ * Last updated Feb 19, 2025
  */
 
 #include "../../src/Utils/str.h"
@@ -70,7 +70,7 @@ void test_hash(Table * table) {
 
     char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(curr);
-    my_str_cpy(curr, "something");
+    my_strncpy(curr, "something");
 
     assert(hash(NULL, curr) == -1);
     assert(hash(NULL, "") == -1);
@@ -79,19 +79,19 @@ void test_hash(Table * table) {
     // general cases
     char *w1 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w1);
-    my_str_cpy(w1, "hello");
+    my_strncpy(w1, "hello");
 
     char *w2 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w2);
-    my_str_cpy(w2, "bye");
+    my_strncpy(w2, "bye");
 
     char *w3 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w3);
-    my_str_cpy(w3, "see");
+    my_strncpy(w3, "see");
 
     char *w4 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w4);
-    my_str_cpy(w4, "flag");
+    my_strncpy(w4, "flag");
     
     char *words[] = {w1, w2, w3, w4};
     long indices[4] = {113, 77, 178, 237};
@@ -137,7 +137,7 @@ void test_insert(Table * table) {
     // brand new key-value pair
     char *keyOne = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(keyOne);
-    my_str_cpy(keyOne, "Hello");
+    my_strncpy(keyOne, "Hello");
 
     long valOne = 15;
     bool insertOne = insert(table, keyOne, valOne);
@@ -161,7 +161,7 @@ void test_insert(Table * table) {
     for (int i = 0; i < N_KEYS; i++) {
         char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
         assert(curr);
-        my_str_cpy(curr, keys[i]);
+        my_strncpy(curr, keys[i]);
 
         bool insertCurr = insert(table, curr, vals[i]);
         assert(insertCurr);
@@ -177,7 +177,7 @@ void test_insert(Table * table) {
     // value is less than 0
     char *w1 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w1);
-    my_str_cpy(w1, "hello");
+    my_strncpy(w1, "hello");
 
     bool insertInvalidTwo = insert(table, w1, -57);
     assert(!insertInvalidTwo);
@@ -187,11 +187,11 @@ void test_insert(Table * table) {
     char *w2, *w3;
     w2 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w2);
-    my_str_cpy(w2, "");
+    my_strncpy(w2, "");
 
     w3 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w3);
-    my_str_cpy(w3, "something");
+    my_strncpy(w3, "something");
 
     bool insertInvalidThree = insert(table, w2, 15);
     bool insertInvalidFour = insert(table, w2, -10);
@@ -211,23 +211,23 @@ void test_lookup(Table * table) {
 
     w1 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w1);
-    my_str_cpy(w1, "banana");
+    my_strncpy(w1, "banana");
 
     w2 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w2);
-    my_str_cpy(w2, "diablo");
+    my_strncpy(w2, "diablo");
 
     w3 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w3);
-    my_str_cpy(w3, "");
+    my_strncpy(w3, "");
 
     w4 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w4);
-    my_str_cpy(w4, "nest");
+    my_strncpy(w4, "nest");
 
     w5 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w5);
-    my_str_cpy(w5, "fish");
+    my_strncpy(w5, "fish");
 
     // existent key(only node in the bucket)
     bool lookupOne = lookup(table, w1);
@@ -249,8 +249,8 @@ void test_lookup(Table * table) {
     bool lookupEight = lookup(table, w4);
     assert(lookupEight);
     
-    assert(!my_str_cmp_opt(table->array[idx]->word, w4));
-    assert(!my_str_cmp_opt(table->array[idx]->next->word, w5));
+    assert(!my_strncmp(table->array[idx]->word, w4));
+    assert(!my_strncmp(table->array[idx]->next->word, w5));
     assert(table->array[idx]->next->next == NULL);
 
     assert((!lookupThree) && (!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
@@ -262,27 +262,27 @@ void test_update(Table * table) {
 
     w1 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w1);
-    my_str_cpy(w1, "under");
+    my_strncpy(w1, "under");
 
     w2 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w2);
-    my_str_cpy(w2, "formula");
+    my_strncpy(w2, "formula");
 
     w3 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w3);
-    my_str_cpy(w3, "elephant");
+    my_strncpy(w3, "elephant");
 
     w4 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w4);
-    my_str_cpy(w4, "");
+    my_strncpy(w4, "");
 
     w5 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w5);
-    my_str_cpy(w5, "blabla");
+    my_strncpy(w5, "blabla");
 
     w6 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w6);
-    my_str_cpy(w6, "ajdhjkfe");
+    my_strncpy(w6, "ajdhjkfe");
 
     // update value associated with an existing key
     long newValOne = 192021;
@@ -323,15 +323,15 @@ void test_get(Table * table) {
 
     w1 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w1);
-    my_str_cpy(w1, "carrot");
+    my_strncpy(w1, "carrot");
 
     w2 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w2);
-    my_str_cpy(w2, "blablah");
+    my_strncpy(w2, "blablah");
 
     w3 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w3);
-    my_str_cpy(w3, "");
+    my_strncpy(w3, "");
 
     // existent key
     long getOne = get(table, w1);
@@ -357,38 +357,38 @@ void test_delete(Table * table) {
 
     w1 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w1);
-    my_str_cpy(w1, "fish");
+    my_strncpy(w1, "fish");
 
     w2 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w2);
-    my_str_cpy(w2, "nest");
+    my_strncpy(w2, "nest");
 
     w3 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w3);
-    my_str_cpy(w3, "banana");
+    my_strncpy(w3, "banana");
 
     w4 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w4);
-    my_str_cpy(w4, "blablah");
+    my_strncpy(w4, "blablah");
 
     w5 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w5);
-    my_str_cpy(w5, "");
+    my_strncpy(w5, "");
 
     w6 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w6);
-    my_str_cpy(w6, "igloo");
+    my_strncpy(w6, "igloo");
 
     w7 = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(w7);
-    my_str_cpy(w7, "AK47");
+    my_strncpy(w7, "AK47");
 
     // delete existing key in a bucket with > 1 node
     long idxOne = hash(table, w1);
     bool deleteOne = delete(table, w1);
     assert(deleteOne);
     assert(table->nWords == 17);
-    assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
+    assert(!my_strncmp(table->array[idxOne]->word, w2));
 
     // delete only node in a bucket
     long idxThree = hash(table, w3);

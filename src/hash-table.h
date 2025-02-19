@@ -7,7 +7,7 @@ extern long powersOfTwo[12];
 
 /* Constant Definitions */
 
-#define N (12)
+#define N_BUCKETS (12)
 
 #define TABLE_ALLOCATION_ERR_MSG "(init) error allocating memory for the table"
 #define TABLE_ARRAY_ALLOCATION_ERR_MSG "(init) error allocating memory for table->array"

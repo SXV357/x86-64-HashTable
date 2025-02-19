@@ -1,5 +1,5 @@
 /* Shreyas Viswanathan, hash-table-benchmark-opt.c 
- * Last updated Feb 18, 2025
+ * Last updated Feb 19, 2025
  */
 
 #include "../Utils/str.h"
@@ -16,6 +16,7 @@
 
 struct timespec start, end; // For measuring time
 FILE *wordFp; // File pointer associated with the 1000w.txt file
+FILE *neFp; // File pointer associated with the non-existent.txt file
 
 /* Function Prototypes for ASM functions that will be benchmarked */
 
@@ -24,11 +25,28 @@ extern bool ASM_insert(Table *, char *, long);
 extern bool ASM_lookup(Table *, char *);
 extern bool ASM_delete(Table *, char *);
 
+/* Utility function that takes in accumulated time across the 3 major operations and prints the average times */
+void print_metrics(long long optInsertTime, long long optExistentLookupTime, long long optNonExistentLookupTime, 
+                   long long optExistentDeletionTime, long long optNonExistentDeletionTime) {  
+
+  double optInsertAvgTime = ((double) optInsertTime / N_TRIALS) / BILLION;
+  double optExistentLookupAvgTime = ((double) optExistentLookupTime / N_NON_EXISTENT) / BILLION;
+  double optNonExistentLookupAvgTime = ((double) optNonExistentLookupTime / N_NON_EXISTENT) / BILLION;
+  double optExistentDeleteAvgTime = ((double) optExistentDeletionTime / N_NON_EXISTENT) / BILLION;
+  double optNonExistentDeleteAvgTime = ((double) optNonExistentDeletionTime / N_NON_EXISTENT) / BILLION;  
+
+  printf(OPT_AVG_INSERT_TIME, optInsertAvgTime);
+  printf(OPT_AVG_EXISTENT_LOOKUP_TIME, optExistentLookupAvgTime);
+  printf(OPT_AVG_NON_EXISTENT_LOOKUP_TIME, optNonExistentLookupAvgTime);
+  printf(OPT_AVG_EXISTENT_DELETE_TIME, optExistentDeleteAvgTime);
+  printf(OPT_AVG_NON_EXISTENT_DELETE_TIME, optNonExistentDeleteAvgTime);
+} /* print_metrics() */
+
 /* Driver function that runs all the benchmarks and prints the time taken for different operation types. */
 int main(int argc, char **argv) {
     srand(time(NULL)); // seed random number generator
 
-    printf("Initializing hash table...\n");
+    printf(HASH_TABLE_INIT_START);
 
     Table * table = ASM_init(MAX_WORDS_NEW);
     assert(table->maxWords == MAX_WORDS_NEW);
@@ -37,85 +55,68 @@ int main(int argc, char **argv) {
         assert(table->array[i] == NULL);
     }
 
-    printf("Hash Table initialized...\n\n");
+    printf(HASH_TABLE_INIT_END);
 
+    // wordFp pointer is opened as part of this benchmark function
     long long insert_total_ns = benchmark_insert(table);
 
-    char ** non_existent_words = load_non_existent_words();
-    char ** random_existent_words = get_random_existent_words(wordFp);
+    char ** non_existent_words = load_words(false, neFp);
+    char ** all_existent_words = load_words(true, wordFp);
+    char ** random_existent_words = get_random_existent_words(all_existent_words);
+
+    // as of this point all file reading has been done already and no more will take place so close both files
+    fclose(neFp);
+    neFp = NULL;
+
+    fclose(wordFp);
+    wordFp = NULL;
 
     long long existent_lookup_total_ns = benchmark_lookup_and_delete(table, random_existent_words, ASM_lookup, true);
-
     long long non_existent_lookup_total_ns = benchmark_lookup_and_delete(table, non_existent_words, ASM_lookup, false);
-
     long long existent_delete_total_ns = benchmark_lookup_and_delete(table, random_existent_words, ASM_delete, true);
-
     long long non_existent_delete_total_ns = benchmark_lookup_and_delete(table, non_existent_words, ASM_delete, false);
 
-    double insertionAvgTime = ((double) insert_total_ns / N_TRIALS) / BILLION;
-    double existentLookupAvgTime = ((double) existent_lookup_total_ns / N_NON_EXISTENT) / BILLION;
-    double nonExistentLookupAvgTime = ((double) non_existent_lookup_total_ns / N_NON_EXISTENT) / BILLION;
-    double existentDeleteAvgTime = ((double) existent_delete_total_ns / N_NON_EXISTENT) / BILLION;
-    double nonExistentDeleteAvgTime = ((double) non_existent_delete_total_ns / N_NON_EXISTENT) / BILLION;
-
-    printf("Average insertion time: %.9fs\n", insertionAvgTime);
-    printf("Average existent key lookup time: %.9fs\n", existentLookupAvgTime);
-    printf("Average non-existent key lookup time: %.9fs\n", nonExistentLookupAvgTime);
-    printf("Average existent key deletion time: %.9fs\n", existentDeleteAvgTime);
-    printf("Average non-existent key deletion time: %.9fs\n", nonExistentDeleteAvgTime);
+    print_metrics(insert_total_ns, existent_lookup_total_ns, non_existent_lookup_total_ns, existent_delete_total_ns, non_existent_delete_total_ns);
 
     return 0;
 } /* main() */
 
-/* This function opens the non-existent.txt file, reads all 500
- * words into the non_existent array and then returns it.
+/* This function either loads in all the words from the 1000w.txt or the non-existent.txt
+ * file based on the supplied existent parameter. If existent is true, all the words from
+ * 1000w.txt are loaded and returned otherwise all words from non-existent.txt are loaded
+ * and returned.
  */
-char ** load_non_existent_words() {
-  char ** non_existent = malloc(sizeof(char *) * N_NON_EXISTENT);
-  assert(non_existent);
+char ** load_words(bool existent, FILE * fp) {
+  char ** res = malloc(sizeof(char *) * (existent ? N_TRIALS : N_NON_EXISTENT));
+  assert(res);
 
-  FILE *neFp = fopen("src/Words/non-existent.txt", "r");
-  assert(neFp);
-
-  int i = 0;
-  char buf[MAX_KEY_SIZE];
-
-  while (fscanf(neFp, "%s\n", buf) == 1) {
-    non_existent[i] = calloc(MAX_KEY_SIZE, sizeof(char));
-    assert(non_existent[i]);
-
-    my_str_cpy(non_existent[i++], buf);
+  if (existent) {
+    fseek(fp, 0, SEEK_SET);
+  } else {
+    fp = fopen("src/Words/non-existent.txt", "r");
+    assert(fp);
   }
 
-  return non_existent;
-} /* load_non_existent_words() */
-
-/* This function returns a list of 500 unique random words from the 1000w.txt file.
- * It first reads all 1000 words from the 1000w.txt file into the 
- * all_existent_words array. Then, it selects 500 random words from this list,
- * reads them into the random_existent_words array and returns it.
- */
-char ** get_random_existent_words(FILE * fp) {
-  // pointer reset to the start of file since this function is executed post the benchmark_insert operation
-  fseek(fp, 0, SEEK_SET);
-
-  // reading all 1000 words into the array
-  char ** all_existent_words = malloc(sizeof(char *) * N_TRIALS);
-  assert(all_existent_words);
-
-  char buf[MAX_KEY_SIZE];
   int i = 0;
+  char buf[MAX_KEY_SIZE];
 
   while (fscanf(fp, "%s\n", buf) == 1) {
-    all_existent_words[i] = calloc(MAX_KEY_SIZE, sizeof(char));
-    assert(all_existent_words[i]);
+    res[i] = calloc(MAX_KEY_SIZE, sizeof(char));
+    assert(res[i]);
 
-    my_str_cpy(all_existent_words[i++], buf);
+    my_strncpy(res[i++], buf);
   }
 
+  return res;
+} /* load_words() */
+
+/* This function returns a list of 500 random and unique existent words taken from the
+ * array supplied as a parameter and returns it.
+ */
+char ** get_random_existent_words(char ** all_existent_words) {
   // counter array to keep track of selected words and prevent duplicate ones
   int countFreq[N_TRIALS] = {0};
-  i = 0;
+  int i = 0;
 
   char ** random_existent_words = malloc(sizeof(char *) * N_NON_EXISTENT);
   assert(random_existent_words);
@@ -127,7 +128,7 @@ char ** get_random_existent_words(FILE * fp) {
       random_existent_words[i] = calloc(MAX_KEY_SIZE, sizeof(char));
       assert(random_existent_words[i]);
 
-      my_str_cpy(random_existent_words[i++], all_existent_words[randomIdx]);
+      my_strncpy(random_existent_words[i++], all_existent_words[randomIdx]);
       countFreq[randomIdx]++;
     }
   }
@@ -149,7 +150,7 @@ long long benchmark_insert(Table * table) {
     while (fscanf(wordFp, "%s\n", buf) == 1) {
       char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
       assert(curr);
-      my_str_cpy(curr, buf);
+      my_strncpy(curr, buf);
 
       clock_gettime(CLOCK_MONOTONIC, &start);
       bool insertCurr = ASM_insert(table, curr, rand());

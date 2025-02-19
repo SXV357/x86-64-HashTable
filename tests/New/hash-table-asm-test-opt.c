@@ -1,5 +1,5 @@
 /* Shreyas Viswanathan, hash-table-asm-test-opt.c 
- * Last updated Feb 18, 2025
+ * Last updated Feb 19, 2025
  */
 
 #include "../../src/Utils/str.h"
@@ -108,7 +108,7 @@ void test_hash(Table * table) {
   // valid keys
   char *word = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(word);
-  my_str_cpy(word, "hello");
+  my_strncpy(word, "hello");
 
   assert(hash(table, word) == ASM_hash(table, word));
 
@@ -117,7 +117,7 @@ void test_hash(Table * table) {
   for (int i = 0; i < 3; i++) {
    char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(curr);
-   my_str_cpy(curr, rem[i]);
+   my_strncpy(curr, rem[i]);
 
    assert(hash(table, curr) == ASM_hash(table, curr));
   }
@@ -129,11 +129,11 @@ void test_hash(Table * table) {
   // test for NULL table
   char *w1 = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(w1);
-  my_str_cpy(w1, "something");
+  my_strncpy(w1, "something");
 
   char *w2 = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(w2);
-  my_str_cpy(w2, "");
+  my_strncpy(w2, "");
 
   assert(ASM_hash(NULL, w1) == -1);
   assert(ASM_hash(NULL, w2) == -1);
@@ -146,19 +146,19 @@ void test_insert(Table * table) {
   
   w1 = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(w1);
-  my_str_cpy(w1, "Hello");
+  my_strncpy(w1, "Hello");
 
   w2 = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(w2);
-  my_str_cpy(w2, "hello");
+  my_strncpy(w2, "hello");
 
   w3 = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(w3);
-  my_str_cpy(w3, "");
+  my_strncpy(w3, "");
 
   w4 = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(w4);
-  my_str_cpy(w4, "something");
+  my_strncpy(w4, "something");
 
   // brand new key-value pair
   long valOne = 15;
@@ -182,7 +182,7 @@ void test_insert(Table * table) {
   for (int i = 0; i < N_KEYS; i++) {
     char *curr = calloc(MAX_KEY_SIZE, sizeof(char));
     assert(curr);
-    my_str_cpy(curr, keys[i]);
+    my_strncpy(curr, keys[i]);
 
     bool insertCurr = ASM_insert(table, curr, vals[i]);
     assert(insertCurr);
@@ -220,23 +220,23 @@ void test_lookup(Table * table) {
 
    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w1);
-   my_str_cpy(w1, "banana");
+   my_strncpy(w1, "banana");
 
    w2 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w2);
-   my_str_cpy(w2, "diablo");
+   my_strncpy(w2, "diablo");
 
    w3 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w3);
-   my_str_cpy(w3, "");
+   my_strncpy(w3, "");
 
    w4 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w4);
-   my_str_cpy(w4, "nest");
+   my_strncpy(w4, "nest");
 
    w5 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w5);
-   my_str_cpy(w5, "fish");
+   my_strncpy(w5, "fish");
 
    // existent key
    bool lookupOne = ASM_lookup(table, w1);
@@ -261,8 +261,8 @@ void test_lookup(Table * table) {
    bool lookupEight = lookup(table, w4);
    assert(lookupEight);
 
-   assert(!my_str_cmp_opt(table->array[idx]->word, w4));
-   assert(!my_str_cmp_opt(table->array[idx]->next->word, w5));
+   assert(!my_strncmp(table->array[idx]->word, w4));
+   assert(!my_strncmp(table->array[idx]->next->word, w5));
    assert(table->array[idx]->next->next == NULL);
 
    assert((!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
@@ -274,19 +274,19 @@ void test_get(Table * table) {
 
   w1 = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(w1);
-  my_str_cpy(w1, "carrot");
+  my_strncpy(w1, "carrot");
 
   w2 = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(w2);
-  my_str_cpy(w2, "blablah");
+  my_strncpy(w2, "blablah");
 
   w3 = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(w3);
-  my_str_cpy(w3, "something");
+  my_strncpy(w3, "something");
 
   w4 = calloc(MAX_KEY_SIZE, sizeof(char));
   assert(w4);
-  my_str_cpy(w4, "");
+  my_strncpy(w4, "");
 
   // existent valid key
   long getOne = ASM_get(table, w1);
@@ -316,31 +316,31 @@ void test_update(Table * table) {
 
    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w1);
-   my_str_cpy(w1, "apple");
+   my_strncpy(w1, "apple");
 
    w2 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w2);
-   my_str_cpy(w2, "Kohli");
+   my_strncpy(w2, "Kohli");
 
    w3 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w3);
-   my_str_cpy(w3, "elephant");   
+   my_strncpy(w3, "elephant");   
 
    w4 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w4);
-   my_str_cpy(w4, "SMG");
+   my_strncpy(w4, "SMG");
 
    w5 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w5);
-   my_str_cpy(w5, "");
+   my_strncpy(w5, "");
 
    w6 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w6);
-   my_str_cpy(w6, "blabla");
+   my_strncpy(w6, "blabla");
 
    w7 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w7);
-   my_str_cpy(w7, "ajdhjkfe");
+   my_strncpy(w7, "ajdhjkfe");
 
    // update value of an existing key
    bool updateOne = ASM_update(table, w1, 192021);
@@ -383,27 +383,27 @@ void test_delete(Table * table) {
 
    w1 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w1);
-   my_str_cpy(w1, "nest");
+   my_strncpy(w1, "nest");
 
    w2 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w2);
-   my_str_cpy(w2, "fish");
+   my_strncpy(w2, "fish");
 
    w3 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w3);
-   my_str_cpy(w3, "banana");
+   my_strncpy(w3, "banana");
 
    w4 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w4);
-   my_str_cpy(w4, "RPG");
+   my_strncpy(w4, "RPG");
 
    w5 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w5);
-   my_str_cpy(w5, "");
+   my_strncpy(w5, "");
 
    w6 = calloc(MAX_KEY_SIZE, sizeof(char));
    assert(w6);
-   my_str_cpy(w6, "Rampage");
+   my_strncpy(w6, "Rampage");
 
    // delete head in bucket with > 1 node
    long idxOne = ASM_hash(table, w1);
@@ -411,7 +411,7 @@ void test_delete(Table * table) {
    bool deleteOne = ASM_delete(table, w1);
    assert(deleteOne);
    assert(table->nWords == 16);
-   assert(!my_str_cmp_opt(table->array[idxOne]->word, w2));
+   assert(!my_strncmp(table->array[idxOne]->word, w2));
 
    // delete only node in a bucket
    long idxThree = ASM_hash(table, w3);

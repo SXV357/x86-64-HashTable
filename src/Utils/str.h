@@ -4,7 +4,7 @@
 
 /* Function Prototypes */
 
-void my_str_cpy(char *, char *);
-int my_str_len(char *);
-int my_str_cmp_opt(char *, char *);
-char * my_str_dup(char *);
+void my_strncpy(char *, char *);
+int my_strlen(char *);
+int my_strncmp(char *, char *);
+char * my_strdup(char *);
