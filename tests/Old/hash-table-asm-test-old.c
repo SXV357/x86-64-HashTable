@@ -67,6 +67,12 @@ int main(int argc, char **argv) {
    test_clear(table);
    printf(TABLE_CLEAR_END);
 
+   free(table->array);
+   table->array = NULL;
+   
+   free(table);
+   table = NULL;
+
    return 0;
 } /* main() */
 
@@ -83,6 +89,12 @@ void test_init() {
      assert(tableOne->array[i] == NULL);
    }
 
+   free(tableOne->array);
+   tableOne->array = NULL;
+
+   free(tableOne);
+   tableOne = NULL;
+
    long maxWordsValidTwo = 113.5;
    Table * tableTwo = ASM_init(maxWordsValidTwo);
    assert(tableTwo);
@@ -92,6 +104,12 @@ void test_init() {
    for (int j = 0; j < tableTwo->nBuckets; j++) {
       assert(tableTwo->array[j] == NULL);
    }
+
+   free(tableTwo->array);
+   tableTwo->array = NULL;
+
+   free(tableTwo);
+   tableTwo = NULL;
 
    // invalid cases
    long maxWordsInvalid[3] = {-3, 200000, 0};

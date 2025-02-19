@@ -59,6 +59,12 @@ int main(int argc, char **argv) {
     test_clear(table);
     printf(TABLE_CLEAR_END);
 
+    free(table->array);
+    table->array = NULL;
+
+    free(table);
+    table = NULL;
+
     return 0;
 } /* main() */
 
@@ -99,6 +105,14 @@ void test_hash(Table * table) {
     for (int i = 0; i < 4; i++) {
         assert(hash(table, words[i]) == indices[i]);
     }
+
+    free(curr);
+    free(w1);
+    free(w2);
+    free(w3);
+    free(w4);
+
+    curr = w1 = w2 = w3 = w4 = NULL;
 } /* test_hash() */
 
 /* Function to test the init function associated with the optimized C implementation. */
@@ -114,6 +128,12 @@ void test_init() {
         assert(tableOne->array[i] == NULL);
     }
 
+    free(tableOne->array);
+    tableOne->array = NULL;
+
+    free(tableOne);
+    tableOne = NULL;
+
     long maxWordsValidTwo = 113.5;
     Table * tableTwo = init(maxWordsValidTwo);
     assert(tableTwo);
@@ -123,6 +143,12 @@ void test_init() {
     for (int j = 0; j < tableTwo->nBuckets; j++) {
         assert(tableTwo->array[j] == NULL);
     }
+
+    free(tableTwo->array);
+    tableTwo->array = NULL;
+
+    free(tableTwo);
+    tableTwo = NULL;
 
     // invalid cases
     long maxWordsInvalid[3] = {-3, 200000, 0};
@@ -165,6 +191,9 @@ void test_insert(Table * table) {
 
         bool insertCurr = insert(table, curr, vals[i]);
         assert(insertCurr);
+
+        free(curr);
+        curr = NULL;
     }
 
     assert(table->nWords == 17);
@@ -201,6 +230,13 @@ void test_insert(Table * table) {
     bool insertInvalidEight = insert(NULL, w2, -23);
     bool insertInvalidNine = insert(NULL, NULL, 94);
     bool insertInvalidTen = insert(NULL, NULL, -5);
+
+    free(keyOne);
+    free(w1);
+    free(w2);
+    free(w3);
+
+    keyOne = w1 = w2 = w3 = NULL;
 
     assert((!insertInvalidThree) && (!insertInvalidFour) && (!insertInvalidFive) && (!insertInvalidSix) && (!insertInvalidSeven) && (!insertInvalidEight) && (!insertInvalidNine) && (!insertInvalidTen));
 } /* test_insert() */
@@ -252,6 +288,14 @@ void test_lookup(Table * table) {
     assert(!my_strncmp(table->array[idx]->word, w4));
     assert(!my_strncmp(table->array[idx]->next->word, w5));
     assert(table->array[idx]->next->next == NULL);
+
+    free(w1);
+    free(w2);
+    free(w3);
+    free(w4);
+    free(w5);
+
+    w1 = w2 = w3 = w4 = w5 = NULL;
 
     assert((!lookupThree) && (!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
 } /* test_lookup() */
@@ -314,6 +358,15 @@ void test_update(Table * table) {
     bool updateTwelve = update(NULL, NULL, 1111);
     bool updateThirteen = update(NULL, NULL, -765);
 
+    free(w1);
+    free(w2);
+    free(w3);
+    free(w4);
+    free(w5);
+    free(w6);
+
+    w1 = w2 = w3 = w4 = w5 = w6 = NULL;
+
     assert((!updateFive) && (!updateSix) && (!updateSeven) && (!updateEight) && (!updateNine) && (!updateTen) && (!updateEleven) && (!updateTwelve) && (!updateThirteen));
 } /* test_update() */
 
@@ -347,6 +400,12 @@ void test_get(Table * table) {
     long getFive = get(NULL, w1);
     long getSix = get(NULL, w2);
     long getSeven = get(NULL, NULL);
+
+    free(w1);
+    free(w2);
+    free(w3);
+
+    w1 = w2 = w3 = NULL;
 
     assert(getThree + getFour + getFive + getSix + getSeven == -5);
 } /* test_get() */
@@ -412,6 +471,16 @@ void test_delete(Table * table) {
     bool deleteSeven = delete(NULL, w5);
     bool deleteEight = delete(NULL, w7);
     bool deleteNine = delete(NULL, w6);
+
+    free(w1);
+    free(w2);
+    free(w3);
+    free(w4);
+    free(w5);
+    free(w6);
+    free(w7);
+
+    w1 = w2 = w3 = w4 = w5 = w6 = w7 = NULL;
     
     assert((!deleteSix) && (!deleteSeven) && (!deleteEight) && (!deleteNine));
 } /* test_delete() */

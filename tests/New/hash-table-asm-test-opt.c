@@ -69,6 +69,9 @@ int main(int argc, char **argv) {
    test_clear(table);
    printf(TABLE_CLEAR_END);
 
+   free(table->array);
+   table->array = NULL;
+
    return 0;
 } /* main() */
 
@@ -85,6 +88,12 @@ void test_init() {
      assert(tableOne->array[i] == NULL);
    }
 
+   free(tableOne->array);
+   tableOne->array = NULL;
+
+   free(tableOne);
+   tableOne = NULL;
+
    long maxWordsValidTwo = 113.5;
    Table * tableTwo = ASM_init(maxWordsValidTwo);
    assert(tableTwo);
@@ -94,6 +103,12 @@ void test_init() {
    for (int j = 0; j < tableTwo->nBuckets; j++) {
       assert(tableTwo->array[j] == NULL);
    }
+
+   free(tableTwo->array);
+   tableTwo->array = NULL;
+
+   free(tableTwo);
+   tableTwo = NULL;
 
    // invalid cases
    long maxWordsInvalid[3] = {-3, 200000, 0};
@@ -120,6 +135,9 @@ void test_hash(Table * table) {
    my_strncpy(curr, rem[i]);
 
    assert(hash(table, curr) == ASM_hash(table, curr));
+
+   free(curr);
+   curr = NULL;
   }
 
   // test for invalid word argument
@@ -138,6 +156,12 @@ void test_hash(Table * table) {
   assert(ASM_hash(NULL, w1) == -1);
   assert(ASM_hash(NULL, w2) == -1);
   assert(ASM_hash(NULL, NULL) == -1);
+
+  free(word);
+  free(w1);
+  free(w2);
+
+  word = w1 = w2 = NULL;
 } /* test_hash() */
 
 /* Function to test the insert function associated with the optimized x86-64 implementation. */
@@ -186,6 +210,9 @@ void test_insert(Table * table) {
 
     bool insertCurr = ASM_insert(table, curr, vals[i]);
     assert(insertCurr);
+
+    free(curr);
+    curr = NULL;
   }
 
   assert(table->nWords == 17);
@@ -209,6 +236,13 @@ void test_insert(Table * table) {
   bool insertInvalidEight = ASM_insert(NULL, w3, -23);
   bool insertInvalidNine = ASM_insert(NULL, NULL, 94);
   bool insertInvalidTen = ASM_insert(NULL, NULL, -5);
+
+  free(w1);
+  free(w2);
+  free(w3);
+  free(w4);
+
+  w1 = w2 = w3 = w4 = NULL;
 
   assert((!insertInvalidThree) && (!insertInvalidFour) && (!insertInvalidFive) && (!insertInvalidSix) && 
  (!insertInvalidSeven) && (!insertInvalidEight) && (!insertInvalidNine) && (!insertInvalidTen));
@@ -265,6 +299,14 @@ void test_lookup(Table * table) {
    assert(!my_strncmp(table->array[idx]->next->word, w5));
    assert(table->array[idx]->next->next == NULL);
 
+   free(w1);
+   free(w2);
+   free(w3);
+   free(w4);
+   free(w5);
+
+   w1 = w2 = w3 = w4 = w5 = NULL;
+
    assert((!lookupFour) && (!lookupFive) && (!lookupSix) && (!lookupSeven));
 } /* test_lookup() */
 
@@ -306,6 +348,13 @@ void test_get(Table * table) {
   long getSix = ASM_get(NULL, w3);
   long getSeven = ASM_get(NULL, NULL);
   long getEight = ASM_get(NULL, w4);
+
+  free(w1);
+  free(w2);
+  free(w3);
+  free(w4);
+
+  w1 = w2 = w3 = w4 = NULL;
 
   assert(getFour + getFive + getSix + getSeven + getEight == -5);
 } /* test_get() */
@@ -373,6 +422,16 @@ void test_update(Table * table) {
    bool updateTwelve = ASM_update(NULL, NULL, 1111);
    bool updateThirteen = ASM_update(NULL, NULL, -765);
 
+   free(w1);
+   free(w2);
+   free(w3);
+   free(w4);
+   free(w5);
+   free(w6);
+   free(w7);
+
+   w1 = w2 = w3 = w4 = w5 = w6 = w7 = NULL;
+
    assert((!updateFive) && (!updateSix) && (!updateSeven) && (!updateEight) && (!updateNine) && 
    (!updateTen) && (!updateEleven) && (!updateTwelve) && (!updateThirteen));
 } /* test_update() */
@@ -434,6 +493,15 @@ void test_delete(Table * table) {
    bool deleteSix = ASM_delete(table, w5);
    bool deleteSeven = ASM_delete(NULL, w6);
    bool deleteEight = ASM_delete(NULL, w5);
+
+   free(w1);
+   free(w2);
+   free(w3);
+   free(w4);
+   free(w5);
+   free(w6);
+
+   w1 = w2 = w3 = w4 = w5 = w6 = NULL;
 
    assert((!deleteSix) && (!deleteSeven) && (!deleteEight));
 } /* test_delete() */
