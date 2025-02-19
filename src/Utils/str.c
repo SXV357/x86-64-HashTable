@@ -74,6 +74,6 @@ char * my_strdup(char * s) {
         return NULL;
     }
 
-    my_str_cpy(res, s);
+    my_strncpy(res, s);
     return res;
 } /* my_str_dup() */
