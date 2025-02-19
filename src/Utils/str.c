@@ -1,5 +1,5 @@
 /* Shreyas Viswanathan, str.c 
- * Last updated Feb 17, 2025
+ * Last updated Feb 18, 2025
  */
 
 #include "./str.h"
@@ -23,8 +23,7 @@ void my_str_cpy(char * dest, char * src) {
     dest[i] = '\0';
 
     while (i < MAX_KEY_SIZE) {
-        dest[i] = '\0';
-        i++;
+        dest[i++] = '\0';
     }
 } /* my_str_cpy() */
 
@@ -60,7 +59,6 @@ int my_str_cmp_opt(char * s1, char * s2) {
             s1_tmp += 8;
             s2_tmp += 8;
             continue;
-
         }
 
         return (c1 < c2) ? -1 : 1;

@@ -1,5 +1,5 @@
 /* Shreyas Viswanathan, runall.c 
- * Last updated Feb 17, 2025
+ * Last updated Feb 18, 2025
  */
 
 #include <stdio.h>
@@ -18,6 +18,8 @@
  * aborts the program right away.
  */
 int main(int argc, char **argv) {
+    /* Checks for executables associated with the old implementations in C and x86-64 Assembly */
+
     // Old C implementation tests
     if (access("./c-old-test", F_OK) == 0) {
         printf(RED "Running tests for old C implementation" RESET "\n\n");
@@ -44,7 +46,7 @@ int main(int argc, char **argv) {
 
     // Optimized C implementation tests
     if (access("./c-opt-test", F_OK) == 0) {
-        printf(RED "Running tests for new C implementation" RESET "\n\n");
+        printf(RED "Running tests for optimized C implementation" RESET "\n\n");
         printf("**************************************************\n");
         system("./c-opt-test");
         printf("**************************************************\n\n");
@@ -55,7 +57,7 @@ int main(int argc, char **argv) {
 
     // Optimized x86-64 Assembly implementation tests
     if (access("./asm-opt-test", F_OK) == 0) {
-        printf(RED "Running tests for new x86-64 implementation" RESET "\n\n");
+        printf(RED "Running tests for optimized x86-64 implementation" RESET "\n\n");
         printf("**************************************************\n");
         system("./asm-opt-test");
         printf("**************************************************\n\n");

@@ -1,5 +1,5 @@
 /* Shreyas Viswanathan, hash-table-old.c 
- * Last updated Feb 17, 2025
+ * Last updated Feb 18, 2025
  */
 
 #include "../hash-table.h"
@@ -11,24 +11,21 @@
 
 /* This function initializes a hash table based on the capacity provided and then returns it. */
 Table * init(long maxWords) {
-    long primeNumbers[] = {67, 131, 257, 521, 1031, 2053, 4099, 8209, 16411, 32771, 65537, 131073};
-    long nPrimeNumbers = sizeof(primeNumbers)/sizeof(long);
-
-    if ((maxWords <= 0) || (maxWords > primeNumbers[nPrimeNumbers - 1])) {
+    if ((maxWords <= 0) || (maxWords > primeNumbers[N_PRIME_NUMBERS - 1])) {
         return NULL;
     }
 
-    Table * table = (Table *) malloc(sizeof(Table));
-    if (table == NULL) {
+    Table * table = malloc(sizeof(Table));
+    if (!table) {
         perror(TABLE_ALLOCATION_ERR_MSG);
         return NULL;
     }
 
     // set it to the largest prime by default because we will later factor maxWords into this
-    table->nBuckets = primeNumbers[nPrimeNumbers-1];
+    table->nBuckets = primeNumbers[N_PRIME_NUMBERS-1];
 
     // set number of buckets based on maxWords parameter(for saving space)
-    for (int i = 0; i < nPrimeNumbers; i++) {
+    for (int i = 0; i < N_PRIME_NUMBERS; i++) {
        if (maxWords < primeNumbers[i]) {
             table->nBuckets =  primeNumbers[i];
             break;
@@ -38,8 +35,8 @@ Table * init(long maxWords) {
     table->maxWords = maxWords;
     table->nWords = 0;
 
-    table->array = (Node **) malloc(table->nBuckets * sizeof(Node *));
-    if (table->array == NULL) {
+    table->array = malloc(table->nBuckets * sizeof(Node *));
+    if (!table->array) {
        perror(TABLE_ARRAY_ALLOCATION_ERR_MSG);
        return NULL;
     }
@@ -54,12 +51,14 @@ Table * init(long maxWords) {
 
 /* This function returns the index that the word parameter hashes to in the range [0, table->nBuckets - 1]. */
 long hash(Table * table, char * word) {
-    if ((table == NULL) || (word == NULL) || (strlen(word) == 0)) {
+    if ((table == NULL) || (word == NULL)) {
         return -1;
     }
     
+    size_t len = strlen(word);
+    if (!len) return -1;
+
     long hashNum = 1;
-    long len = strlen(word);
 
     // 31 used since its a prime number and also to ensure minimum collisions
     for (long i = 0; i < len; i++) {
@@ -76,13 +75,13 @@ bool lookup(Table * table, char * word) {
     }
 
     long hashNum = hash(table, word);
-    Node * elem = table->array[hashNum];
+    Node * head = table->array[hashNum];
 
-    while ((elem != NULL) && (strcmp(elem->word,word) != 0)) {
-      elem = elem->next;
+    while ((head) && (strcmp(head->word, word) != 0)) {
+        head = head->next;
     }
 
-    return elem == NULL ? false : true;
+    return !head ? false : true;
 } /* lookup() */
 
 /* Looks up the word specified by the parameter in the hash table and returns the value associated with it.
@@ -112,20 +111,21 @@ long get(Table * table, char * word) {
  */
 bool insert(Table * table, char * word, long value) {
     // empty keys and negative values not allowed
-    if ((table == NULL) || (word == NULL) || (strlen(word) == 0) || (value < 0) || (table->nWords > table->maxWords)) {
+    if ((table == NULL) || (word == NULL) || (strlen(word) == 0) || (value < 0) || 
+        (table->nWords > table->maxWords)) {
         return false;
     }
 
     long targetIdx = hash(table, word);
 
-    Node * new = (Node *) malloc(sizeof(Node));
-    if (new == NULL) {
+    Node * new = malloc(sizeof(Node));
+    if (!new) {
         perror(NODE_ALLOCATION_ERR_MSG);
         return false;
     }
 
     new->word = malloc(strlen(word) + 1);
-    if (new->word == NULL) {
+    if (!(new->word)) {
         perror(NODE_WORD_ALLOCATION_ERR_MSG);
         return false;
     }
@@ -138,12 +138,12 @@ bool insert(Table * table, char * word, long value) {
     Node * head = table->array[targetIdx];
 
     // case 1: empty chain
-    if (head == NULL) {
+    if (!head) {
         table->array[targetIdx] = new;
     } else {
         // case 2: non-empty chain
         while (head) {
-            if (strcmp(head->word, word) == 0) {
+            if (!(strcmp(head->word, word))) {
                 // the key-value pair already exists
                 if (head->value == value) {
                     return false;
@@ -175,7 +175,6 @@ bool delete(Table * table, char * word) {
     }
 
     long targetIdx = hash(table, word);
-
     Node * head = table->array[targetIdx];
 
     // prev node tracking necessary for deleting nodes not at the start of the chain
@@ -183,12 +182,12 @@ bool delete(Table * table, char * word) {
     bool found = false;
 
     while (head) {
-        if (strcmp(head->word, word) == 0) {
+        if (!(strcmp(head->word, word))) {
             found = true;
             Node * temp = head;
 
             // the node is at the start of chain
-            if (prev == NULL) {
+            if (!prev) {
                 table->array[targetIdx] = head->next;
             } else {
                 // either in the middle or the end
@@ -223,16 +222,16 @@ bool update(Table * table, char * word, long value) {
     }
 
     long hashNum = hash(table, word);
-    Node * elem = table->array[hashNum];
+    Node * head = table->array[hashNum];
 
-    while (elem) {
-        if (strcmp(elem->word, word) == 0) {
-            elem->value = value;
+    while (head) {
+        if (!(strcmp(head->word, word))) {
+            head->value = value;
             return true;
-        } else if (elem->next == NULL) {
+        } else if (head->next == NULL) {
             break;
         }
-        elem = elem->next;
+        head = head->next;
     }
 
     // at this point we know the node doesn't exist so make sure we're not at capacity
@@ -241,8 +240,8 @@ bool update(Table * table, char * word, long value) {
     }
 
     // create a new node and insert it at the end of the chain of the specified bucket
-    Node * e = (Node *) malloc(sizeof(Node));
-    if (e == NULL) {
+    Node * e = malloc(sizeof(Node));
+    if (!e) {
         return false;
     }
 
@@ -250,10 +249,10 @@ bool update(Table * table, char * word, long value) {
     e->value = value;
     e->next = NULL;
 
-    if (elem == NULL) {
+    if (head == NULL) {
         table->array[hashNum] = e;
     } else {
-        elem->next = e;
+        head->next = e;
     }
 
     table->nWords++;
@@ -264,19 +263,23 @@ bool update(Table * table, char * word, long value) {
 
 /* Prints the contents only of the non-NULL buckets of the hash table as long as it isn't NULL. */
 void print(Table * table) {
-    if (table != NULL) {
+    if (table) {
         for (int i = 0; i < table->nBuckets; i++) {
             Node * head = table->array[i];
 
-            if (head != NULL) {
+            if (head) {
                 printf(BUCKET_NUMBER_OLD, (i + 1));
 
-                while (head != NULL) {
-                    if (head->next != NULL) {
-                        printf(NODE_NEXT_NOT_NULL, head->word, head->value);
+                while (head) {
+                    char *currWord = head->word;
+                    long currVal = head->value;
+
+                    if (head->next) {
+                        printf(NODE_NEXT_NOT_NULL, currWord, currVal);
                     } else {
-                        printf(NODE_NEXT_NULL, head->word, head->value);
+                        printf(NODE_NEXT_NULL, currWord, currVal);
                     }
+
                     head = head->next;
                 }
             }
@@ -288,7 +291,7 @@ void print(Table * table) {
  * successful.
  */
 bool clear(Table * table) {
-    if (table == NULL) {
+    if (!table) {
         return false;
     }
 
