@@ -1,8 +1,7 @@
 /* Shreyas Viswanathan, hash-table-benchmark-old.c 
- * Last updated Feb 17, 2025
+ * Last updated Feb 18, 2025
  */
 
-#include "../hash-table.h"
 #include "./benchmark.h"
 
 #include <stdio.h>
