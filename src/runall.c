@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
         printf(RED "Running tests for optimized x86-64 implementation" RESET "\n\n");
         printf("**************************************************\n");
         system("./asm-opt-test");
-        printf("**************************************************\n\n");
+        printf("**************************************************\n");
     } else {
         perror("Error: asm-opt-test not found");
         exit(1);
