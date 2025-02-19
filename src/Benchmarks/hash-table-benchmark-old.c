@@ -59,8 +59,13 @@ int main(int argc, char **argv) {
     // wordFp pointer is opened as part of this benchmark function
     long long insert_total_ns = benchmark_insert(table);
 
+    neFp = fopen("src/Words/non-existent.txt", "r");
+    assert(neFp);
     char ** non_existent_words = load_words(false, neFp);
+
+    fseek(wordFp, 0, SEEK_SET);
     char ** all_existent_words = load_words(true, wordFp);
+
     char ** random_existent_words = get_random_existent_words(all_existent_words);
 
     // as of this point all file reading has been done already and no more will take place so close both files
@@ -88,13 +93,6 @@ int main(int argc, char **argv) {
 char ** load_words(bool existent, FILE * fp) {
   char ** res = malloc(sizeof(char *) * (existent ? N_TRIALS : N_NON_EXISTENT));
   assert(res);
-
-  if (existent) {
-    fseek(fp, 0, SEEK_SET);
-  } else {
-    fp = fopen("src/Words/non-existent.txt", "r");
-    assert(fp);
-  }
 
   int i = 0;
   char buf[MAX_WORD_SIZE_OLD];
