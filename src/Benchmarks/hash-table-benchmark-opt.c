@@ -24,6 +24,7 @@ extern Table * ASM_init(long);
 extern bool ASM_insert(Table *, char *, long);
 extern bool ASM_lookup(Table *, char *);
 extern bool ASM_delete(Table *, char *);
+extern bool ASM_clear(Table *);
 
 /* Utility function that takes in accumulated time across the 3 major operations and prints the average times */
 void print_metrics(long long optInsertTime, long long optExistentLookupTime, long long optNonExistentLookupTime, 
@@ -114,7 +115,8 @@ int main(int argc, char **argv) {
     non_existent_words = all_existent_words = random_existent_words = NULL;
 
     // clear out all nodes and free the table
-    ASM_clear(table);
+    bool clearRes = ASM_clear(table);
+    assert(clearRes);
     
     free(table->array);
     table->array = NULL;
