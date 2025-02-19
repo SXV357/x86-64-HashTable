@@ -142,7 +142,7 @@ void test_insert(Table * table) {
   char *keys[16] = {"apple", "banana", "carrot", "dog", "elephant", "fish", "grape", "house", "igloo", "jazz", "vine", "xray", "nest", "yarn", "boat", "under"};
   long vals[16] = {42, 17, 98765, 1234, 555, 999999, 12, 8765, 333, 45678, 123, 456, 789, 101112, 131415, 161718};
 
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N_KEYS; i++) {
     bool insertCurr = ASM_insert(table, keys[i], vals[i]);
     assert(insertCurr);
   }

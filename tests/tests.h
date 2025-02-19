@@ -9,7 +9,7 @@ extern long vals[16];
 
 #define MAX_WORDS_OLD (256)
 #define MAX_WORDS_NEW (255)
-#define N (16)
+#define N_KEYS (16)
 
 #define TABLE_INIT_TEST_START "Running table initialization tests...\n"
 #define TABLE_INIT_TEST_END "Table initialization tests passed...\n\n"
