@@ -2,14 +2,14 @@
 
 /* Global array definitions */
 
-static const char *keys[] = {"apple", "banana", "carrot", "dog", "elephant", "fish", "grape", "house", "igloo", "jazz", "vine", "xray", "nest", "yarn", "boat", "under"};
-static const long vals[16] = {42, 17, 98765, 1234, 555, 999999, 12, 8765, 333, 45678, 123, 456, 789, 101112, 131415, 161718};
+extern char *keys[16];
+extern long vals[16];
 
 /* Constant Definitions */
 
 #define MAX_WORDS_OLD (256)
 #define MAX_WORDS_NEW (255)
-#define N (sizeof(vals) / sizeof(long))
+#define N (16)
 
 #define TABLE_INIT_TEST_START "Running table initialization tests...\n"
 #define TABLE_INIT_TEST_END "Table initialization tests passed...\n\n"

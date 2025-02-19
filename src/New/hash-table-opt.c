@@ -13,7 +13,9 @@
 
 /* This function initializes a hash table based on the capacity provided and then returns it. */
 Table * init(long maxWords) {
-    if ((maxWords <= 0) || (maxWords > powersOfTwo[N_POWERS_OF_TWO - 1])) {
+    long powersOfTwo[12] = {64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072};
+    
+    if ((maxWords <= 0) || (maxWords > powersOfTwo[N - 1])) {
         return NULL;
     }
 
@@ -24,10 +26,10 @@ Table * init(long maxWords) {
     }
 
     // set it to the largest power of 2 by default because we will later factor maxWords into this
-    table->nBuckets = powersOfTwo[N_POWERS_OF_TWO - 1];
+    table->nBuckets = powersOfTwo[N - 1];
 
     // set number of buckets based on maxWords parameter(for saving space)
-    for (int i = 0; i < N_POWERS_OF_TWO; i++) {
+    for (int i = 0; i < N; i++) {
        if (maxWords < powersOfTwo[i]) {
             table->nBuckets = powersOfTwo[i];
             break;

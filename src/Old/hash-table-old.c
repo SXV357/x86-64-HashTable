@@ -11,7 +11,9 @@
 
 /* This function initializes a hash table based on the capacity provided and then returns it. */
 Table * init(long maxWords) {
-    if ((maxWords <= 0) || (maxWords > primeNumbers[N_PRIME_NUMBERS - 1])) {
+    long primeNumbers[12] = {67, 131, 257, 521, 1031, 2053, 4099, 8209, 16411, 32771, 65537, 131073};
+    
+    if ((maxWords <= 0) || (maxWords > primeNumbers[N - 1])) {
         return NULL;
     }
 
@@ -22,10 +24,10 @@ Table * init(long maxWords) {
     }
 
     // set it to the largest prime by default because we will later factor maxWords into this
-    table->nBuckets = primeNumbers[N_PRIME_NUMBERS-1];
+    table->nBuckets = primeNumbers[N-1];
 
     // set number of buckets based on maxWords parameter(for saving space)
-    for (int i = 0; i < N_PRIME_NUMBERS; i++) {
+    for (int i = 0; i < N; i++) {
        if (maxWords < primeNumbers[i]) {
             table->nBuckets =  primeNumbers[i];
             break;

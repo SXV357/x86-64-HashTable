@@ -1,5 +1,5 @@
-/* Shreyas Viswanathan, hash-table-c-test-old.c 
- * Last updated Feb 17, 2025
+/* Shreyas Viswanathan, hash-table-asm-test-old.c 
+ * Last updated Feb 18, 2025
  */
 
 #include "../tests.h"
@@ -138,6 +138,9 @@ void test_insert(Table * table) {
   bool insertThree = ASM_insert(table, keyOne, 500);
   assert(insertThree);
   assert(table->nWords == 1);
+
+  char *keys[16] = {"apple", "banana", "carrot", "dog", "elephant", "fish", "grape", "house", "igloo", "jazz", "vine", "xray", "nest", "yarn", "boat", "under"};
+  long vals[16] = {42, 17, 98765, 1234, 555, 999999, 12, 8765, 333, 45678, 123, 456, 789, 101112, 131415, 161718};
 
   for (int i = 0; i < N; i++) {
     bool insertCurr = ASM_insert(table, keys[i], vals[i]);

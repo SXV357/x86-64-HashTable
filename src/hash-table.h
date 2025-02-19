@@ -2,13 +2,12 @@
 
 /* Global variable definitions */
 
-static const long primeNumbers[] = {67, 131, 257, 521, 1031, 2053, 4099, 8209, 16411, 32771, 65537, 131073};
-static const long powersOfTwo[] = {64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072};
+extern long primeNumbers[12];
+extern long powersOfTwo[12];
 
 /* Constant Definitions */
 
-#define N_PRIME_NUMBERS (sizeof(primeNumbers) / sizeof(long))
-#define N_POWERS_OF_TWO (sizeof(powersOfTwo) / sizeof(long))
+#define N (12)
 
 #define TABLE_ALLOCATION_ERR_MSG "(init) error allocating memory for the table"
 #define TABLE_ARRAY_ALLOCATION_ERR_MSG "(init) error allocating memory for table->array"
