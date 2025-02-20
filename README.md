@@ -33,8 +33,7 @@ Important Notes:
 - Windows users will need WSL (Windows Subsystem for Linux) or a Unix-like environment
 - Apple Silicon (M1/M2/M3) Mac users will need to:
   - Either SSH into a server with x86-64 support
-  - Or use a x86-64 virtual machine
-  This is because Apple Silicon Macs use ARM architecture and cannot directly run x86-64 assembly
+  - Or use a x86-64 virtual machine. This is because Apple Silicon Macs use ARM architecture and cannot directly run x86-64 assembly
 - Intel-based Macs can run the project directly
 
 ## Hash Table Structure
