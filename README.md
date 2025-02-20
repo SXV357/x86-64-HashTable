@@ -125,6 +125,11 @@ This script will only run the tests for which the executable is present and will
  ```
 
 In essence, for running the individual test and individual benchmarks or even for running all tests at once, make sure you run the ```make`` command from the root directory since it will produce all the executables necessary to run these.
+**NOTE**: These tests were run on a 2023 16 inches Macbook Pro with the following specs:
+- CPU: M2 Pro
+- RAM: 16 GB
+- OS: Sequoia 15.2
+- Dataset: 1000 words for insertion, 500 for lookup/delete as mentioned earlier
 
 ## Contribution Guidelines
 Even though this project has several associated components, there are still many things that can be done to improve it some of which include but aren't limited to:
