@@ -1,5 +1,8 @@
 # x86-64-HashTable
 
+## Acknowledgments
+This project was inspired by a CS250 course project at Purdue University. While it uses some boilerplate code from the original course materials, it has been significantly extended with additional features, optimizations, and testing infrastructure. Original course materials and inspiration courtesy of Professor Gustavo Rodriguez-Rivera.
+
 ## About The Project & Core Functionalities
 This project involves an implementation of a hash table in x86-64 Assembly that uses chaining to handle collisions. The implementation involves all the core functionalities that any typical hash table has such as:
 - Initialization
@@ -152,6 +155,11 @@ Even though this project has several associated components, there are still many
 - Implementing support for dynamic resizing when the load factor is exceeded
 - Measuring memory usage as part of the benchmarking process
 - Figure out more ways of minimizing memory access in other functions beyond ```lookup```
+
+Before contributing, please note:
+- This project was inspired by a CS250 course project at Purdue University
+- Some boilerplate code was provided by the original course materials
+- All additional implementations and optimizations were developed independently
 
 If you'd like to contribute to this project, there are a few things you will need to do:
 1. Fork the repository and make any changes you want in a new branch
