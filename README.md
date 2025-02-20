@@ -68,10 +68,17 @@ Beyond the core functionalities implemented for the hash table several optimizat
 4. Aligned all keys to 8 bytes(i.e, making them all 32 bytes) and modified ```strncmp``` to utilize long operations by comparing keys in chunks instead of using byte-by-byte operations
 5. Decreased the number of memory accesses in the ```lookup()``` function by detaching a found node from its current position in the chain and re-attaching it at the head so that if the same key is looked up once again, a chain traversal isn't required.
 
-The primary functions that were benchmarked were insertion, lookup and deletion since those are the key operations associated with a hash table. There were significant performance benefits, some of which are outlined as follows:
-- **Insertion time** reduced by **32%**
-- **Lookup time** reduced by **27%**
-- **Deletion time** reduced by **25%**
+The primary functions that were benchmarked were insertion, lookup and deletion since those are the key operations associated with a hash table and there were significant performance benefits as can be seen below:
+
+- **Times recorded for the non-optimized x86-64 implementation**
+![Old Performance](assets/old-benchmark.png)
+- **Times recorded for the optimized x86-64 implementation**
+![Optimized Performance](assets/new-benchmark.png)
+
+Based on the times recorded above it can be seen how:
+- **Insertion time** is reduced by **32%**
+- **Lookup time** is reduced by **27%**
+- **Deletion time** is reduced by **25%**
 
 ## Utilizing The Hash Table
 If you would like to utilize the hash table, whether it is the old or the optimized x86-64 Assembly implementation, make sure to do the following:
