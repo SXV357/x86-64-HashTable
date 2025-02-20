@@ -108,3 +108,15 @@ This script will only run the tests for which the executable is present and will
 In essence, for running the individual test and individual benchmarks or even for running all tests at once, make sure you run the ```make`` command from the root directory since it will produce all the executables necessary to run these.
 
 ## Contribution Guidelines
+Even though this project has several associated components, there are still many things that can be done to improve it some of which include but aren't limited to:
+- Implementing support for storing keys and values of different types
+- Implementing a custom memory allocator and garbage collector
+- Implementing benchmarking for other operations like ```get```, ```update```, ```delete``` etc
+- Utilizing AVX instructions to make the assembly implementations even faster
+- Implementing support for dynamic resizing when the load factor is exceeded
+- Measuring memory usage as part of the benchmarking process
+- Figure out more ways of minimizing memory access in other functions beyond ```lookup```
+
+If you'd like to contribute to this project, there are a few things you will need to do:
+1. Fork the repository and make any changes you want in a new branch
+2. When proposing changes to be integrated with the repository, make sure to create a PR and add me as a reviewer
