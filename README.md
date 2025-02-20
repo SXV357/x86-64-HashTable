@@ -12,6 +12,16 @@ This project involves an implementation of a hash table in x86-64 Assembly that 
 - Printing the contents of all slots in the hash table
 - Clearing the contents of all slots in the hash table
 
+## Quick Start
+1. First clone the repository by entering the following in your terminal
+```
+git clone https://github.com/yourusername/x86-64-HashTable.git
+```
+2. To switch into the root directory type:
+```
+cd x86-64-HashTable
+```
+
 ## Hash Table Structure
 
 If you're interested in taking a look at the structs that are used to define the hash table, you should check out ```src/hash-table.h```. When you scroll down a bit past the constant definitions, you will see two structs declared: ```Node``` and ```Table```. Here are some important things to know about each of them:
