@@ -22,6 +22,8 @@ git clone https://github.com/yourusername/x86-64-HashTable.git
 cd x86-64-HashTable
 ```
 
+For instructions on building and running tests/benchmarks, see [Running Tests & Benchmarks](#running-tests-benchmarks).
+
 ## Hash Table Structure
 
 If you're interested in taking a look at the structs that are used to define the hash table, you should check out ```src/hash-table.h```. When you scroll down a bit past the constant definitions, you will see two structs declared: ```Node``` and ```Table```. Here are some important things to know about each of them:
