@@ -90,4 +90,19 @@ extern bool ASM_init(Table *, char *, long);
         gcc -g -Wall src/New/hash-table-opt.s pathToYourDriverFile -o executableName
         ```
 
-## Running Tests
+## Running Tests & Benchmarks
+One option you have for running tests is simply typing ```make``` in your terminal when you're in the root directory and then running each of the executables that end in **test** individually. However, you also have the option of running all tests at once. One main thing you must do before running all tests is running the ```make``` command from the root directory which will compile all the test scripts including the script used to run all the tests. Then, run the following executable in your terminal:
+```
+./runall
+```
+This script will only run the tests for which the executable is present and will throw an error for the non-existent ones which is why it's important to ensure they all are present before you do so. The ```make``` command also produces executables for running both the old and optimized x86-64 implementation benchmarks so if you'd like to run them do the following:
+    - Running the old benchmark
+    ```
+    ./old-benchmark
+    ```
+    - Running the optimized benchmark
+    ```
+    ./new-benchmark
+    ```
+
+In essence, for running the individual test and individual benchmarks or even for running all tests at once, make sure you run the ```make`` command from the root directory since it will produce all the executables necessary to run these.
