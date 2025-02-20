@@ -74,3 +74,20 @@ The primary functions that were benchmarked were insertion, lookup and deletion 
 - **Deletion time** reduced by **25%**
 
 ## Utilizing The Hash Table
+If you would like to utilize the hash table, whether it is the old or the optimized x86-64 Assembly implementation, make sure to do the following:
+1. In the new file which you create, make sure to specify the function prototypes for the ones you want to use prefixed with the ```extern``` keyword. All the assembly functions follow the same naming convention as the prototypes specified in ```src/hash-table.h``` with the exact same names and parameters. The only caveat is that each function name starts with **ASM_**. For example, if you want to initialize the hash table and insert a key-value pair, you would specify the prototypes as follows:
+```
+extern Table * ASM_init(long);
+extern bool ASM_init(Table *, char *, long);
+```
+2. The above convention carries over to other functions as well. For example, if you want to use the lookup function, you'd add ```extern bool ASM_lookup(Table *, char *)``` as one of the function prototypes and so on... Once you've set up the necessary prototypes, you're ready to start using and testing the functions. Depending on whether you're using the functions associated with the old or optimized implementation, the compilation process will be a bit different but the function prototypes will remain the exact same. One thing you'll need to do if you don't include ```src/hash-table.h``` in the driver file is including it as a dependency in the compilation process.
+    - If you're using the functions associated with the old x86-64 implementation:
+        ```
+        gcc -g -Wall src/Old/hash-table-old.s pathToYourDriverFile -o executableName
+        ```
+    - If you're using the functions associated with the optimized x86-64 implementation:
+        ```
+        gcc -g -Wall src/New/hash-table-opt.s pathToYourDriverFile -o executableName
+        ```
+
+## Running Tests
