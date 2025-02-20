@@ -22,7 +22,7 @@ git clone https://github.com/yourusername/x86-64-HashTable.git
 cd x86-64-HashTable
 ```
 
-For instructions on building and running tests/benchmarks, see [Running Tests & Benchmarks](#running-tests-benchmarks).
+For instructions on building and running tests/benchmarks, see [Running Tests & Benchmarks](#running-tests--benchmarks).
 
 ## Hash Table Structure
 
