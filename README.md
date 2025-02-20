@@ -96,13 +96,15 @@ One option you have for running tests is simply typing ```make``` in your termin
 ./runall
 ```
 This script will only run the tests for which the executable is present and will throw an error for the non-existent ones which is why it's important to ensure they all are present before you do so. The ```make``` command also produces executables for running both the old and optimized x86-64 implementation benchmarks so if you'd like to run them do the following:
-    - Running the old benchmark
-    ```
-    ./old-benchmark
-    ```
-    - Running the optimized benchmark
-    ```
-    ./new-benchmark
-    ```
+- Running the old benchmark
+```
+./old-benchmark
+```
+ - Running the optimized benchmark
+```
+./new-benchmark
+ ```
 
 In essence, for running the individual test and individual benchmarks or even for running all tests at once, make sure you run the ```make`` command from the root directory since it will produce all the executables necessary to run these.
+
+## Contribution Guidelines
