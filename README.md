@@ -139,7 +139,7 @@ This script will only run the tests for which the executable is present and will
 ./new-benchmark
  ```
 
-In essence, for running the individual test and individual benchmarks or even for running all tests at once, make sure you run the ```make`` command from the root directory since it will produce all the executables necessary to run these.
+In essence, for running the individual test and individual benchmarks or even for running all tests at once, make sure you run the ```make``` command from the root directory since it will produce all the executables necessary to run these.
 **NOTE**: These benchmarks were run on a 2023 16 inches Macbook Pro with the following specs:
 - CPU: M2 Pro
 - RAM: 16 GB
