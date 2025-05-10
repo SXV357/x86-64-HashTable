@@ -1,5 +1,11 @@
 # x86-64-HashTable
 
+<div align="center"> 
+  <a href="https://deepwiki.com/SXV357/x86-64-HashTable"> 
+    <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"> 
+  </a> 
+</div>
+
 ## Acknowledgments
 This project was inspired by a CS250 course project at Purdue University. While it uses some boilerplate code from the original course materials, it has been significantly extended with additional features, optimizations, and testing infrastructure. Original course materials and inspiration courtesy of Professor Gustavo Rodriguez-Rivera.
 
