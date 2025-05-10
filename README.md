@@ -163,4 +163,4 @@ Before contributing, please note:
 
 If you'd like to contribute to this project, there are a few things you will need to do:
 1. Fork the repository and make any changes you want in a new branch
-2. When proposing changes to be integrated with the repository, make sure to create a PR and add me as a reviewer
+2. When proposing changes to be integrated with the repository, make sure to create a pull request
